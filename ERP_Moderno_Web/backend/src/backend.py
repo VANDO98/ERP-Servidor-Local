@@ -15,6 +15,7 @@ from src.auth import get_password_hash
 
 # Definir ruta de BD hardcoded o relativa robusta para evitar problemas de import
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# ERP_Moderno_Web/backend/data/gestion_basica.db
 DB_PATH = os.path.join(BASE_DIR, "data", "gestion_basica.db")
 
 def get_connection():
@@ -669,7 +670,7 @@ def registrar_compra(cabecera, detalles):
     Registra una compra (factura) completa
     Schema: fecha_emision, numero, total_compra, total_gravada, total_igv...
     """
-    from src.unit_converter import convert_quantity, are_units_compatible
+    from .unit_converter import convert_quantity, are_units_compatible
     
     conn = get_connection()
     cursor = conn.cursor()
