@@ -1,0 +1,7 @@
+streamlit
+pandas
+openpyxl
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+bitstring

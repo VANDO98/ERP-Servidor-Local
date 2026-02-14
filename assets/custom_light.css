@@ -1,0 +1,122 @@
+/* Custom Light Mode Styles */
+
+/* Variables for Light Mode */
+:root {
+    --primary-color: #1E3A8A;
+    --bg-color: #FFFFFF;
+    --text-color: #000000;
+    --card-bg: #F9FAFB;
+    --border-color: #E5E7EB;
+}
+
+/* Main container */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* AG Grid Theme Override */
+.ag-theme-alpine {
+    --ag-background-color: #FFFFFF;
+    --ag-foreground-color: #000000;
+    --ag-header-background-color: #F3F4F6;
+    --ag-header-foreground-color: #000000;
+    --ag-odd-row-background-color: #FFFFFF;
+    --ag-row-hover-color: #F9FAFB;
+    --ag-border-color: #E5E7EB;
+}
+
+.ag-theme-alpine .ag-header-cell-text {
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+.ag-theme-alpine .ag-cell {
+    color: #000000 !important;
+}
+
+/* Inputs - Remove focus outline */
+input:focus,
+textarea:focus,
+select:focus,
+.Select:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.25) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Dropdown fix */
+.Select-menu-outer {
+    background-color: #FFFFFF !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.Select-option {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+.Select-option:hover {
+    background-color: #F3F4F6 !important;
+}
+
+/* Date Picker */
+.DateInput_input {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+.CalendarDay__default {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+.CalendarDay__selected {
+    background-color: var(--primary-color) !important;
+    color: #FFFFFF !important;
+}
+
+.CalendarDay__default:hover {
+    background-color: #F3F4F6 !important;
+}
+
+/* Navigation Links */
+.nav-link {
+    color: #000000 !important;
+}
+
+.nav-link:hover {
+    background-color: #F3F4F6 !important;
+}
+
+.nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: #FFFFFF !important;
+}
+
+/* Buttons */
+.btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.25) !important;
+}
+
+/* Sidebar */
+.border-end {
+    border-right: 1px solid var(--border-color) !important;
+}
+
+/* Plotly charts - ensure visibility */
+.js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}

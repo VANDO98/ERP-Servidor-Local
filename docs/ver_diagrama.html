@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama Vivo - gestion_basica.db</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .container { max-width: 95%; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 10px; }
+        p { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        .diagram { display: flex; justify-content: center; overflow-x: auto; }
+        .refresh-note { text-align: center; font-size: 0.9em; color: #e74c3c; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Estructura de Base de Datos</h1>
+        <p>Generado automáticamente desde <strong>gestion_basica.db</strong></p>
+        
+        <div class="mermaid diagram">
+erDiagram
+    ERROR { string mensaje "name 'tables' is not defined" }
+        </div>
+        
+        <div class="refresh-note">
+            Para actualizar este diagrama despues de cambiar la BD, ejecuta: <code>python generar_diagrama.py</code>
+        </div>
+    </div>
+</body>
+</html>
