@@ -6,3 +6,6 @@ node_modules/
 *.db
 dist/
 archive_legacy/
+backend/venv/
+backend/__pycache__/
+frontend/node_modules/
