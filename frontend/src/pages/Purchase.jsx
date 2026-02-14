@@ -104,17 +104,22 @@ export default function Purchase() {
 
     const updateItem = (index, field, value) => {
         const newItems = [...formData.items]
-        newItems[index][field] = value
+        
+        // Handle numeric inputs properly for cantidad and precio_unitario
+        if (field === 'cantidad' || field === 'precio_unitario') {
+            newItems[index][field] = value === '' ? '' : parseFloat(value)
+        } else {
+            newItems[index][field] = value
+        }
 
         // Auto-fill UM and last price when product is selected
         if (field === 'pid' && value) {
             const product = products.find(p => p.id === parseInt(value))
             if (product) {
                 newItems[index].um = product.unidad_medida || ''
-                // Only if not already set (e.g. from OC) logic? 
-                // Careful not to overwrite price if loaded from OC but user changes product? 
-                // If user changes product, we should fetch new price.
-                newItems[index].precio_unitario = parseFloat(product.ultimo_precio_compra || 0).toFixed(2)
+                // Auto-populate price from last purchase or average cost, rounded to 2 decimals
+                const price = product.ultimo_precio_compra || product.costo_promedio || 0
+                newItems[index].precio_unitario = parseFloat(price.toFixed(2))
             }
         }
 

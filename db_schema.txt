@@ -1,0 +1,41 @@
+Tables found:
+- proveedores
+  Columns: id (INTEGER), ruc_dni (TEXT), razon_social (TEXT), direccion (TEXT), telefono (TEXT), email (TEXT), categoria (TEXT)
+- productos
+  Columns: id (INTEGER), codigo_sku (TEXT), nombre (TEXT), unidad_medida (TEXT), categoria (TEXT), stock_actual (REAL), costo_promedio (REAL), precio_venta (REAL), categoria_id (INTEGER), stock_minimo (REAL)
+- compras_cabecera
+  Columns: id (INTEGER), proveedor_id (INTEGER), fecha_emision (DATE), tipo_documento (TEXT), serie (TEXT), numero (TEXT), moneda (TEXT), total_gravada (REAL), total_igv (REAL), total_compra (REAL), fecha_registro (TIMESTAMP), tipo_cambio (REAL), orden_compra_id (INTEGER)
+- compras_detalle
+  Columns: id (INTEGER), compra_id (INTEGER), producto_id (INTEGER), descripcion (TEXT), cantidad (REAL), precio_unitario (REAL), subtotal (REAL), unidad_medida (TEXT), costo_previo (REAL), tasa_impuesto (REAL), almacen_id (INTEGER)
+- categorias
+  Columns: id (INTEGER), nombre (TEXT)
+- almacenes
+  Columns: id (INTEGER), nombre (TEXT), ubicacion (TEXT)
+- stock_almacen
+  Columns: id (INTEGER), producto_id (INTEGER), almacen_id (INTEGER), stock_actual (REAL)
+- ordenes_compra
+  Columns: id (INTEGER), proveedor_id (INTEGER), fecha_emision (DATE), fecha_entrega_est (DATE), estado (TEXT), moneda (TEXT), observaciones (TEXT), total_orden (REAL), tasa_igv (REAL)
+- ordenes_compra_det
+  Columns: id (INTEGER), oc_id (INTEGER), producto_id (INTEGER), cantidad_solicitada (REAL), cantidad_recibida (REAL), precio_unitario_pactado (REAL)
+- guias_remision
+  Columns: id (INTEGER), proveedor_id (INTEGER), oc_id (INTEGER), numero_guia (TEXT), fecha_recepcion (DATE)
+- guias_remision_det
+  Columns: id (INTEGER), guia_id (INTEGER), producto_id (INTEGER), cantidad_recibida (REAL), almacen_destino_id (INTEGER)
+- factura_guia_rel
+  Columns: factura_id (INTEGER), guia_id (INTEGER)
+- salidas_cabecera
+  Columns: id (INTEGER), fecha (DATE), tipo_salida (TEXT), destino (TEXT), observaciones (TEXT), fecha_registro (TIMESTAMP)
+- salidas_detalle
+  Columns: id (INTEGER), salida_id (INTEGER), producto_id (INTEGER), cantidad (REAL), almacen_id (INTEGER), costo_unitario (REAL)
+- configuracion
+  Columns: id (INTEGER), clave (TEXT), valor (TEXT), descripcion (TEXT), fecha_modificacion (TIMESTAMP)
+- tipo_cambio
+  Columns: fecha (TEXT), venta (REAL), compra (REAL), origen (TEXT)
+- traslados_cabecera
+  Columns: id (INTEGER), fecha (DATE), origen_id (INTEGER), destino_id (INTEGER), observaciones (TEXT), fecha_registro (DATETIME), estado (TEXT)
+- traslados_detalle
+  Columns: id (INTEGER), traslado_id (INTEGER), producto_id (INTEGER), cantidad (REAL), costo_unitario (REAL)
+- ordenes_compra_detalle
+  Columns: id (INTEGER), orden_id (INTEGER), producto_id (INTEGER), cantidad (REAL), precio_unitario (REAL)
+- users
+  Columns: id (INTEGER), username (TEXT), password_hash (TEXT), role (TEXT), is_active (BOOLEAN), created_at (DATETIME), username_hash (TEXT), username_encrypted (TEXT)
