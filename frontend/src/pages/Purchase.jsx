@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, AlertCircle, History, FileText } from 'lucide-react
 import { useLocation } from 'react-router-dom'
 import ProductSearch from '../components/ProductSearch'
 import ExportButton from '../components/ExportButton'
+import ModalProvider from '../components/ModalProvider' // Import Modal
 
 export default function Purchase() {
     const location = useLocation()
@@ -14,6 +15,7 @@ export default function Purchase() {
     const [loading, setLoading] = useState(false)
     const [successMsg, setSuccessMsg] = useState('')
     const [errorMsg, setErrorMsg] = useState('')
+    const [isProviderModalOpen, setIsProviderModalOpen] = useState(false) // Modal State
 
     // History data
     const [purchaseHistory, setPurchaseHistory] = useState([])
@@ -35,7 +37,7 @@ export default function Purchase() {
     const [guides, setGuides] = useState([]) // Available guides
     const [selectedGuideId, setSelectedGuideId] = useState('')
 
-    useEffect(() => {
+    const loadInitialData = () => {
         Promise.all([
             api.getProducts(),
             api.getGuides(), // Fetch guides
@@ -47,21 +49,33 @@ export default function Purchase() {
             setSuppliers(provs)
             setWarehouses(whs)
         }).catch(console.error)
-    }, [])
+    }
 
     useEffect(() => {
-        const params = new URLSearchParams(location.search)
-        const ocId = params.get('ocId')
-        const guideId = params.get('guideId')
+        
+        loadInitialData()
+    }, [])
 
-        if (guideId && ocId) {
-            loadInvoiceFromGuide(guideId, ocId)
-        } else if (ocId) {
-            loadOcData(ocId)
-        } else if (view !== 'register') {
-            fetchHistory()
+    // New: Fetch history when view changes
+    useEffect(() => {
+        if (view === 'history') {
+            api.getPurchasesSummary()
+                .then(setPurchaseHistory)
+                .catch(err => console.error("Error loading purchase history:", err))
+        } else if (view === 'detailed') {
+            api.getPurchasesDetailed()
+                .then(setDetailedHistory)
+                .catch(err => console.error("Error loading detailed history:", err))
         }
-    }, [location.search, view])
+    }, [view])
+
+    // ... (keep useEffect for location.search)
+
+    // ... (keep loadInvoiceFromGuide and loadOcData)
+
+    // ...
+
+
 
     // New: Load Data safely merging OC Header + Guide Items
     const loadInvoiceFromGuide = async (gid, oid) => {
@@ -74,7 +88,6 @@ export default function Purchase() {
             ])
 
             if (!resOc.ok) throw new Error("Error cargando OC")
-            if (!resGuide.ok) throw new Error("Error cargando Guía")
 
             const ocData = await resOc.json()
             const guideData = await resGuide.json()
@@ -235,6 +248,12 @@ export default function Purchase() {
 
     return (
         <div className="space-y-6">
+            <ModalProvider
+                isOpen={isProviderModalOpen}
+                onClose={() => setIsProviderModalOpen(false)}
+                onProviderSaved={loadInitialData}
+            />
+
             {/* Tabs */}
             <div className="flex space-x-2 border-b border-slate-200">
                 <button
@@ -267,10 +286,25 @@ export default function Purchase() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor *</label>
-                                <select required className="w-full p-2 border border-slate-200 rounded-lg" value={formData.proveedor_id} onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}>
-                                    <option value="">Seleccionar...</option>
-                                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.razon_social}</option>)}
-                                </select>
+                                <div className="flex gap-2">
+                                    <select
+                                        required
+                                        className="w-full p-2 border border-slate-200 rounded-lg"
+                                        value={formData.proveedor_id}
+                                        onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}
+                                    >
+                                        <option value="">Seleccionar...</option>
+                                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.razon_social}</option>)}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsProviderModalOpen(true)}
+                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                        title="Nuevo Proveedor"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { api } from '../services/api'
-import { ArrowUpDown, Search, Filter } from 'lucide-react'
+import { ArrowUpDown, Search, Filter, Plus } from 'lucide-react'
 import ExportButton from '../components/ExportButton'
+import ModalWarehouse from '../components/ModalWarehouse'
 
 export default function Inventory() {
     const [view, setView] = useState('summary') // 'summary' | 'detailed' | 'kardex'
     const [inventory, setInventory] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false)
 
     // Kardex state
     const [products, setProducts] = useState([])
@@ -99,11 +101,24 @@ export default function Inventory() {
 
     return (
         <div className="space-y-6">
+            <ModalWarehouse
+                isOpen={isWarehouseModalOpen}
+                onClose={() => setIsWarehouseModalOpen(false)}
+                onWarehouseSaved={fetchWarehouses}
+            />
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800">Inventario</h2>
                     <p className="text-slate-500">Gestión de existencias y valorización</p>
                 </div>
+                <button
+                    onClick={() => setIsWarehouseModalOpen(true)}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                    <Plus size={20} className="mr-2" />
+                    Nuevo Almacén
+                </button>
             </div>
 
             {/* Tabs */}

@@ -106,8 +106,44 @@ def get_users(current_user: dict = Depends(get_current_user)):
                     pass # Keep the hash/original if decrypt fails
             
         return users
+        return users
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "user"
+
+@app.post("/api/users")
+def create_user_endpoint(user: UserCreate, current_user: dict = Depends(get_current_user)):
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Requires Admin Role")
+    
+    success, msg = db.crear_usuario(user.username, user.password, user.role)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"msg": msg}
+
+@app.delete("/api/users/{user_id}")
+def delete_user_endpoint(user_id: int, current_user: dict = Depends(get_current_user)):
+    # Basic delete implementation
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Requires Admin Role")
+    
+    # We need a delete function in db, or just execute here?
+    # Better to keep logic in backend.py.
+    # But for now, let's just add a simple query via db connection helper if needed, 
+    # OR assume I need to add 'eliminar_usuario' to backend.py?
+    # Let's add 'eliminar_usuario' to backend.py next. 
+    # For now, I'll just put the endpoint here and let it fail or I'll implement 'eliminar_usuario' in backend.py first?
+    # Actually, I'll just use raw SQL here for speed or add it to backend.py properly.
+    # Expected behavior: clean architecture. Call db.eliminar_usuario.
+    
+    success, msg = db.eliminar_usuario(user_id)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"msg": msg}
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -223,11 +259,39 @@ def get_warehouses():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/categories")
+class WarehouseCreate(BaseModel):
+    nombre: str
+    ubicacion: Optional[str] = ""
+
+@app.post("/api/warehouses")
+def create_warehouse(warehouse: WarehouseCreate):
+    try:
+        ok, msg = db.crear_almacen(warehouse.nombre, warehouse.ubicacion)
+        if ok:
+            return {"status": "success", "msg": msg}
+        else:
+            raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 def get_categories():
     try:
         df = db.obtener_categorias()
         return df.fillna("").to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class CategoryCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = ""
+
+@app.post("/api/categories")
+def create_category(category: CategoryCreate):
+    try:
+        ok, msg = db.crear_categoria(category.nombre, category.descripcion)
+        if ok:
+            return {"status": "success", "msg": msg}
+        else:
+            raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -236,6 +300,24 @@ def get_providers():
     try:
         df = db.obtener_proveedores()
         return df.fillna("").to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ProviderCreate(BaseModel):
+    ruc: Optional[str] = None
+    razon_social: str
+    direccion: Optional[str] = None
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+
+@app.post("/api/providers")
+def create_provider(provider: ProviderCreate):
+    try:
+        ok, msg = db.crear_proveedor(provider.dict())
+        if ok:
+            return {"status": "success", "msg": msg}
+        else:
+            raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -447,12 +529,32 @@ def get_order_balance(oid: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/orders/pending")
-def get_pending_orders():
-    """Get orders that have items pending delivery"""
+@app.get("/api/products")
+def get_products():
+    """Get all products with current stock"""
     try:
-        data = db.obtener_ordenes_pendientes()
-        return data
+        products = db.obtener_productos_extendido()
+        return products.fillna("").to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ProductCreate(BaseModel):
+    nombre: str
+    codigo_sku: Optional[str] = None
+    categoria_id: Optional[int] = None
+    precio_venta: Optional[float] = 0.0
+    costo_promedio: Optional[float] = 0.0
+    stock_minimo: Optional[float] = 5.0
+    unidad_medida: Optional[str] = 'UN'
+
+@app.post("/api/products")
+def create_product(product: ProductCreate):
+    try:
+        ok, msg = db.crear_producto(product.dict())
+        if ok:
+            return {"status": "success", "msg": msg}
+        else:
+            raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

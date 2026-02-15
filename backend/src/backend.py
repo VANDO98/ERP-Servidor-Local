@@ -1428,11 +1428,12 @@ def obtener_productos_extendido():
              JOIN compras_cabecera cc ON cd.compra_id = cc.id 
              WHERE cd.producto_id = p.id
             ) as ultimo_precio_compra,
-            p.precio_venta
+            p.precio_venta,
+            p.stock_minimo
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
         LEFT JOIN stock_almacen sa ON p.id = sa.producto_id
-        GROUP BY p.id, p.codigo_sku, p.nombre, c.nombre, p.unidad_medida, p.costo_promedio, p.precio_venta
+        GROUP BY p.id, p.codigo_sku, p.nombre, c.nombre, p.unidad_medida, p.costo_promedio, p.precio_venta, p.stock_minimo
     """
     df = pd.read_sql(query, conn)
     conn.close()
@@ -2651,3 +2652,159 @@ def obtener_saldo_oc(oc_id):
         return None
     finally:
         conn.close()
+
+def crear_proveedor(data):
+    """
+    Crea un nuevo proveedor
+    Data: ruc, razon_social, direccion, telefono, email
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Check if RUC exists
+        if data.get('ruc'):
+            cursor.execute("SELECT id FROM proveedores WHERE ruc=?", (data['ruc'],))
+            existing = cursor.fetchone()
+            if existing:
+                return False, f"El proveedor con RUC {data['ruc']} ya existe."
+
+        cursor.execute("""
+            INSERT INTO proveedores (ruc, razon_social, direccion, telefono, email, fecha_registro)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        """, (
+            data.get('ruc'),
+            data['razon_social'],
+            data.get('direccion'),
+            data.get('telefono'),
+            data.get('email')
+        ))
+        conn.commit()
+        return True, "Proveedor creado exitosamente"
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al crear proveedor: {str(e)}"
+    finally:
+        conn.close()
+
+def crear_categoria(nombre, descripcion=""):
+    """
+    Crea una nueva categoría
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Check duplicate name
+        cursor.execute("SELECT id FROM categorias WHERE nombre=?", (nombre,))
+        if cursor.fetchone():
+            return False, f"La categoría '{nombre}' ya existe."
+
+        cursor.execute("""
+            INSERT INTO categorias (nombre, descripcion)
+            VALUES (?, ?)
+        """, (nombre, descripcion))
+        conn.commit()
+        return True, "Categoría creada exitosamente"
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al crear categoría: {str(e)}"
+    finally:
+        conn.close()
+
+def crear_almacen(nombre, ubicacion=""):
+    """
+    Crea un nuevo almacén
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Check duplicate name
+        cursor.execute("SELECT id FROM almacenes WHERE nombre=?", (nombre,))
+        if cursor.fetchone():
+            return False, f"El almacén '{nombre}' ya existe."
+
+        cursor.execute("""
+            INSERT INTO almacenes (nombre, ubicacion)
+            VALUES (?, ?)
+        """, (nombre, ubicacion))
+        almacen_id = cursor.lastrowid
+        
+        # Opcional: Inicializar stock en 0 para todos los productos existentes en este nuevo almacén
+        # Esto es pesado si hay muchos productos, pero útil.
+        # Por ahora lo dejamos simple: el stock se crea bajo demanda o el sistema asume 0 si no existe.
+        # Pero mi lógica de `get_products` usa LEFT JOINs o subqueries?
+        # `obtener_stock_global` suma todo.
+        # `stock_almacen` tiene (producto_id, almacen_id).
+        
+        conn.commit()
+        return True, "Almacén creado exitosamente"
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al crear almacén: {str(e)}"
+    finally:
+        conn.close()
+
+def crear_usuario(username, password, role="user"):
+    """
+    Crea un nuevo usuario con contraseña hasheada
+    """
+    try:
+        from src.auth import get_username_hash
+        import bcrypt
+    except ImportError:
+        return False, "Error interno: Módulos de autenticación no encontrados"
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Check duplicate username (plain or hash)
+        # For simplicity and legacy compat, we check plain username first
+        cursor.execute("SELECT id FROM usuarios WHERE username=?", (username,))
+        if cursor.fetchone():
+            return False, f"El usuario '{username}' ya existe."
+
+        # Hash password
+        # bcrypt.hashpw requires bytes, so encode.
+        salt = bcrypt.gensalt()
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+        
+        # Calculate username hash for secure search
+        username_hash = get_username_hash(username)
+
+        cursor.execute("""
+            INSERT INTO usuarios (username, username_hash, password_hash, role, is_active, created_at)
+            VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+        """, (username, username_hash, password_hash, role))
+        
+        conn.commit()
+        return True, "Usuario creado exitosamente"
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al crear usuario: {str(e)}"
+    finally:
+        conn.close()
+
+def eliminar_usuario(user_id):
+    """
+    Elimina un usuario por ID.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Prevent deleting admin (id 1 usually, or by name)
+        cursor.execute("SELECT username, role FROM usuarios WHERE id=?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            return False, "Usuario no encontrado"
+        
+        if user[0] == 'admin' or user[1] == 'admin':
+             return False, "No se puede eliminar al administrador principal"
+
+        cursor.execute("DELETE FROM usuarios WHERE id=?", (user_id,))
+        conn.commit()
+        return True, "Usuario eliminado"
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al eliminar usuario: {str(e)}"
+    finally:
+        conn.close()
+

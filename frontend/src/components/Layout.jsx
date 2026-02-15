@@ -65,6 +65,14 @@ export default function Layout() {
         navigate('/login')
     }
 
+    const [isUserMenuOpen, setUserMenuOpen] = useState(false)
+
+    // ... (keep handling functions)
+
+    const toggleUserMenu = () => {
+        setUserMenuOpen(!isUserMenuOpen)
+    }
+
     return (
         <div className="flex h-screen bg-slate-50 overflow-hidden">
             <aside
@@ -89,38 +97,7 @@ export default function Layout() {
                             onClick={() => handleNavigate(item.id)}
                         />
                     ))}
-
-                    {/* Configuration Dropdown */}
-                    <div>
-                        <SidebarItem
-                            icon={Settings}
-                            label={isSidebarOpen ? "Configuración" : ""}
-                            active={configItems.some(i => i.id === currentPath)}
-                            onClick={() => toggleSubmenu('config')}
-                            hasSubmenu={true}
-                            isOpen={openSubmenu === 'config'}
-                        />
-                        <div className={`overflow-hidden transition-all duration-300 ${openSubmenu === 'config' ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                            {configItems.map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => handleNavigate(item.id)}
-                                    className={`w-full flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg transition-colors duration-200 text-sm ${currentPath === item.id
-                                        ? 'text-blue-400 font-medium'
-                                        : 'text-slate-500 hover:text-slate-300'
-                                        }`}
-                                >
-                                    <item.icon size={16} />
-                                    {isSidebarOpen && <span>{item.label}</span>}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </nav>
-
-                <div className="p-3 border-t border-slate-800">
-                    <SidebarItem icon={LogOut} label={isSidebarOpen ? "Salir" : ""} onClick={handleLogout} />
-                </div>
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -131,11 +108,53 @@ export default function Layout() {
                     >
                         <Menu size={24} />
                     </button>
-                    <div className="flex items-center space-x-4">
-                        <div className="text-sm text-slate-500">Hola, <span className="font-bold text-slate-700">{user?.username || 'Usuario'}</span></div>
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-sm">
-                            {user?.username?.charAt(0).toUpperCase() || 'U'}
-                        </div>
+
+                    <div className="relative">
+                        <button
+                            onClick={toggleUserMenu}
+                            className="flex items-center space-x-4 hover:bg-slate-50 p-2 rounded-lg transition-colors"
+                        >
+                            <div className="text-right hidden md:block">
+                                <div className="text-sm font-bold text-slate-700">{user?.username || 'Usuario'}</div>
+                                <div className="text-xs text-slate-500 capitalize">{user?.role || 'User'}</div>
+                            </div>
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-lg border-2 border-white shadow-sm">
+                                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                        </button>
+
+                        {/* User Dropdown */}
+                        {isUserMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-2 animate-in fade-in slide-in-from-top-2">
+                                <div className="px-4 py-2 border-b border-slate-50 mb-2">
+                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Configuración</p>
+                                </div>
+
+                                {configItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            handleNavigate(item.id)
+                                            setUserMenuOpen(false)
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center space-x-2 transition-colors"
+                                    >
+                                        <item.icon size={16} />
+                                        <span>{item.label}</span>
+                                    </button>
+                                ))}
+
+                                <div className="border-t border-slate-50 my-2"></div>
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors"
+                                >
+                                    <LogOut size={16} />
+                                    <span>Cerrar Sesión</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </header>
 

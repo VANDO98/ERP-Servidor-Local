@@ -40,6 +40,18 @@ export const api = {
         return result;
     },
 
+    getPurchasesSummary: async () => {
+        const res = await fetch(`${API_URL}/purchases/summary`);
+        if (!res.ok) throw new Error('Failed to fetch purchases summary');
+        return res.json();
+    },
+
+    getPurchasesDetailed: async () => {
+        const res = await fetch(`${API_URL}/purchases/detailed`);
+        if (!res.ok) throw new Error('Failed to fetch purchases detailed');
+        return res.json();
+    },
+
     registerMovement: async (data) => {
         const res = await fetch(`${API_URL}/movements`, {
             method: 'POST',

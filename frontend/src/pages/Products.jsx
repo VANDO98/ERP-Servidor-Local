@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from 'react'
 import { api } from '../services/api'
 import { Search, Plus } from 'lucide-react'
+import ModalProduct from '../components/ModalProduct'
 
 export default function Products() {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+    const fetchProducts = async () => {
+        try {
+            const data = await api.getProducts()
+            setProducts(data)
+        } catch (error) {
+            console.error("Error fetching products:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const data = await api.getProducts()
-                setProducts(data)
-            } catch (error) {
-                console.error("Error fetching products:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
         fetchProducts()
     }, [])
 
@@ -33,11 +36,22 @@ export default function Products() {
                     <h2 className="text-2xl font-bold text-slate-800">Productos</h2>
                     <p className="text-slate-500">Gestión maestra de artículos</p>
                 </div>
-                <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
                     <Plus className="w-5 h-5 mr-1" />
                     Nuevo Producto
                 </button>
             </div>
+
+            <ModalProduct
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onProductSaved={() => {
+                    fetchProducts()
+                }}
+            />
 
             {/* Toolbar */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
