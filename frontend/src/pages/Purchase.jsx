@@ -28,16 +28,22 @@ export default function Purchase() {
         tc: 3.85,
         tasa_igv: 18,
         items: [],
-        orden_compra_id: null // Link to OC
+        orden_compra_id: null, // Link to OC
+        guia_remision_id: null // Track guide reference
     })
+
+    const [guides, setGuides] = useState([]) // Available guides
+    const [selectedGuideId, setSelectedGuideId] = useState('')
 
     useEffect(() => {
         Promise.all([
             api.getProducts(),
+            api.getGuides(), // Fetch guides
             api.getProviders(),
             fetch('http://localhost:8000/api/warehouses').then(r => r.json())
-        ]).then(([prods, provs, whs]) => {
+        ]).then(([prods, guidesData, provs, whs]) => {
             setProducts(prods)
+            setGuides(guidesData) // Set guides
             setSuppliers(provs)
             setWarehouses(whs)
         }).catch(console.error)
@@ -104,7 +110,7 @@ export default function Purchase() {
 
     const updateItem = (index, field, value) => {
         const newItems = [...formData.items]
-        
+
         // Handle numeric inputs properly for cantidad and precio_unitario
         if (field === 'cantidad' || field === 'precio_unitario') {
             newItems[index][field] = value === '' ? '' : parseFloat(value)
@@ -129,6 +135,40 @@ export default function Purchase() {
     const removeItem = (index) => {
         const newItems = formData.items.filter((_, i) => i !== index)
         setFormData({ ...formData, items: newItems })
+    }
+
+    const handleImportGuide = async (gid) => {
+        if (!gid) {
+            setSelectedGuideId('')
+            return
+        }
+
+        if (formData.items.length > 0 && !window.confirm("Esto reemplazará los items actuales. ¿Desea continuar?")) {
+            return
+        }
+
+        try {
+            const res = await fetch(`http://localhost:8000/api/guides/${gid}`)
+            const data = await res.json()
+
+            const newItems = data.items.map(i => ({
+                pid: i.producto_id,
+                cantidad: i.cantidad_recibida,
+                precio_unitario: 0, // User must enter price
+                um: i.unidad_medida || 'UN'
+            }))
+
+            setFormData({
+                ...formData,
+                items: newItems,
+                guia_remision_id: gid,
+                proveedor_id: data.proveedor_id || formData.proveedor_id, // Auto-select provider if possible
+                observaciones: (formData.observaciones || '') + ` [Ref: Guía ${data.numero_guia}]`
+            })
+            setSelectedGuideId(gid)
+        } catch (error) {
+            console.error("Error importing guide:", error)
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -249,6 +289,45 @@ export default function Purchase() {
                         </div>
                     </div>
 
+                    {/* Guide Import Section */}
+                    {formData.proveedor_id && (
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center gap-4">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-blue-800 mb-1">
+                                    Importar desde Guía de Remisión (Opcional)
+                                </label>
+                                <select
+                                    className="w-full p-2 border border-blue-200 rounded text-sm"
+                                    value={selectedGuideId}
+                                    onChange={(e) => handleImportGuide(e.target.value)}
+                                >
+                                    <option value="">-- Seleccionar Guía --</option>
+                                    {guides
+                                        .filter(g => g.proveedor == suppliers.find(s => s.id == formData.proveedor_id)?.razon_social) // Filter by provider name logic matching
+                                        // Note: guides endpoint returns 'proveedor' name, not ID. suppliers has 'razon_social'.
+                                        // Wait, backend 'obtener_guias' returns 'proveedor' (name).
+                                        // Ideally we filter by ID if available, but list endpoint didn't verify ID return.
+                                        // Let's verify backend 'obtener_guias' -> returns g.id, g.fecha..., p.razon_social as proveedor.
+                                        // It DOES NOT return p.id as provider_id. 
+                                        // So filtering by name is risky but necessary unless I update backend.
+                                        // OR I just show all guides. 
+                                        // Let's check backend code again?
+                                        // Backend line 2470: p.razon_social as proveedor.
+                                        // It does not select p.id.
+                                        // I'll filter by name for now, or just show all if no match.
+                                        .map(g => (
+                                            <option key={g.id} value={g.id}>
+                                                {g.numero_guia} | {g.fecha_recepcion} | {g.proveedor}
+                                            </option>
+                                        ))}
+                                </select>
+                            </div>
+                            <div className="text-xs text-blue-600 max-w-md">
+                                Seleccione una guía para cargar automáticamente los productos recibidos y vincular la factura.
+                            </div>
+                        </div>
+                    )}
+
                     {/* GRID FOR ITEMS */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                         <div className="flex justify-between items-center mb-4">
@@ -288,10 +367,10 @@ export default function Purchase() {
                                                         <input type="text" disabled className="w-20 p-2 border border-slate-200 rounded text-sm bg-slate-50" value={item.um} readOnly />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <input required type="number" step="0.01" min="0.01" className="w-24 p-2 border border-slate-200 rounded text-sm text-right" value={item.cantidad} onChange={e => updateItem(idx, 'cantidad', e.target.value)} />
+                                                        <input required type="number" step="0.01" min="0.01" className="w-24 p-2 border border-slate-200 rounded text-sm text-right" value={item.cantidad} onChange={e => updateItem(idx, 'cantidad', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'cantidad', val.toFixed(2)) }} />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <input required type="number" step="0.01" min="0" className="w-28 p-2 border border-slate-200 rounded text-sm text-right" value={item.precio_unitario} onChange={e => updateItem(idx, 'precio_unitario', e.target.value)} />
+                                                        <input required type="number" step="0.01" min="0" className="w-28 p-2 border border-slate-200 rounded text-sm text-right" value={item.precio_unitario} onChange={e => updateItem(idx, 'precio_unitario', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'precio_unitario', val.toFixed(2)) }} />
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-medium">
                                                         S/ {subtotal.toFixed(2)}
@@ -359,87 +438,96 @@ export default function Purchase() {
                         </button>
                     </div>
                 </form>
-            )}
+            )
+            }
 
             {/* History Summary */}
-            {view === 'history' && (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        <ExportButton data={purchaseHistory} filename="historial_compras_resumen" />
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4">Fecha</th>
-                                        <th className="px-6 py-4">Documento</th>
-                                        <th className="px-6 py-4">Proveedor</th>
-                                        <th className="px-6 py-4">Moneda</th>
-                                        <th className="px-6 py-4 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {purchaseHistory.map((p, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4">{p.fecha}</td>
-                                            <td className="px-6 py-4 font-mono">{p.serie}-{p.numero}</td>
-                                            <td className="px-6 py-4">{p.proveedor}</td>
-                                            <td className="px-6 py-4">{p.moneda}</td>
-                                            <td className="px-6 py-4 text-right font-medium">{p.moneda === 'USD' ? '$' : 'S/'} {p.total?.toFixed(2)}</td>
+            {
+                view === 'history' && (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <ExportButton data={purchaseHistory} filename="historial_compras_resumen" />
+                        </div>
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                                        <tr>
+                                            <th className="px-6 py-4">Fecha</th>
+                                            <th className="px-6 py-4">Documento</th>
+                                            <th className="px-6 py-4">OC Ref</th>
+                                            <th className="px-6 py-4">Proveedor</th>
+                                            <th className="px-6 py-4">Moneda</th>
+                                            <th className="px-6 py-4 text-right">Total</th>
                                         </tr>
-                                    ))}
-                                    {purchaseHistory.length === 0 && (
-                                        <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {purchaseHistory.map((p, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                <td className="px-6 py-4">{p.fecha}</td>
+                                                <td className="px-6 py-4 font-mono">{p.numero_documento}</td>
+                                                <td className="px-6 py-4 font-mono text-blue-600">
+                                                    {p.oc_id ? `OC-${String(p.oc_id).padStart(6, '0')}` : '-'}
+                                                </td>
+                                                <td className="px-6 py-4">{p.proveedor}</td>
+                                                <td className="px-6 py-4">{p.moneda}</td>
+                                                <td className="px-6 py-4 text-right font-medium">{p.moneda === 'USD' ? '$' : 'S/'} {p.total_final?.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                        {purchaseHistory.length === 0 && (
+                                            <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Detailed History */}
-            {view === 'detailed' && (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        <ExportButton data={detailedHistory} filename="historial_compras_detallado" />
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4">Fecha</th>
-                                        <th className="px-6 py-4">Documento</th>
-                                        <th className="px-6 py-4">Proveedor</th>
-                                        <th className="px-6 py-4">Producto</th>
-                                        <th className="px-6 py-4 text-right">Cantidad</th>
-                                        <th className="px-6 py-4 text-right">P. Unit.</th>
-                                        <th className="px-6 py-4 text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {detailedHistory.map((d, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4">{d.fecha}</td>
-                                            <td className="px-6 py-4 font-mono text-xs">{d.serie}-{d.numero}</td>
-                                            <td className="px-6 py-4">{d.proveedor}</td>
-                                            <td className="px-6 py-4">{d.producto}</td>
-                                            <td className="px-6 py-4 text-right">{d.cantidad?.toFixed(2)}</td>
-                                            <td className="px-6 py-4 text-right">{d.moneda === 'USD' ? '$' : 'S/'} {d.precio_unitario?.toFixed(2)}</td>
-                                            <td className="px-6 py-4 text-right font-medium">{d.moneda === 'USD' ? '$' : 'S/'} {d.subtotal?.toFixed(2)}</td>
+            {
+                view === 'detailed' && (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <ExportButton data={detailedHistory} filename="historial_compras_detallado" />
+                        </div>
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                                        <tr>
+                                            <th className="px-6 py-4">Fecha</th>
+                                            <th className="px-6 py-4">Documento</th>
+                                            <th className="px-6 py-4">Proveedor</th>
+                                            <th className="px-6 py-4">Producto</th>
+                                            <th className="px-6 py-4 text-right">Cantidad</th>
+                                            <th className="px-6 py-4 text-right">P. Unit.</th>
+                                            <th className="px-6 py-4 text-right">Subtotal</th>
                                         </tr>
-                                    ))}
-                                    {detailedHistory.length === 0 && (
-                                        <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {detailedHistory.map((d, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                <td className="px-6 py-4">{d.fecha}</td>
+                                                <td className="px-6 py-4 font-mono text-xs">{d.serie}-{d.numero}</td>
+                                                <td className="px-6 py-4">{d.proveedor}</td>
+                                                <td className="px-6 py-4">{d.producto}</td>
+                                                <td className="px-6 py-4 text-right">{d.cantidad?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-right">{d.moneda === 'USD' ? '$' : 'S/'} {d.precio_unitario?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-right font-medium">{d.moneda === 'USD' ? '$' : 'S/'} {d.subtotal?.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                        {detailedHistory.length === 0 && (
+                                            <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     )
 }

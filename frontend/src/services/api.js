@@ -92,5 +92,19 @@ export const api = {
         const result = await res.json();
         if (!res.ok) throw new Error(result.detail || 'Error converting order');
         return result;
+    },
+
+    // --- Guides ---
+    getGuides: async () => {
+        const res = await fetch(`${API_URL}/guides`);
+        if (!res.ok) throw new Error('Failed to fetch guides');
+        return res.json();
+    },
+
+    // --- Warehouses ---
+    getWarehouses: async () => {
+        const res = await fetch(`${API_URL}/warehouses`);
+        if (!res.ok) throw new Error('Failed to fetch warehouses');
+        return res.json();
     }
 };

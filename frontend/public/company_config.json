@@ -1,0 +1,19 @@
+{
+    "company": {
+        "name": "MI EMPRESA S.A.C.",
+        "ruc": "20123456789",
+        "address": "Av. Principal 123, Zona Industrial, Lima",
+        "phone": "(01) 555-0101",
+        "email": "contacto@miempresa.com",
+        "web": "www.miempresa.com",
+        "logo_url": "/logo_placeholder.png"
+    },
+    "settings": {
+        "tax_name": "IGV",
+        "tax_rate": 0.18,
+        "oc_serie": "OC-2024",
+        "oc_observaciones": "Horario de recepción: Lunes a Viernes 8am - 5pm. Enviar factura electrónica a facturacion@miempresa.com",
+        "currency_main": "PEN",
+        "currency_sec": "USD"
+    }
+}

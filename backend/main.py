@@ -166,6 +166,55 @@ def get_products():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/purchases/summary")
+def get_purchases_summary():
+    try:
+        data = db.obtener_compras_historial()
+        return data.fillna("").to_dict(orient='records')
+    except Exception as e:
+        print(f"Error fetching purchase history: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+@app.get("/api/purchases/detailed")
+def get_purchases_detailed():
+    try:
+        data = db.obtener_detalle_compras()
+        return data.fillna("").to_dict(orient='records')
+    except Exception as e:
+        print(f"Error fetching detailed history: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+# --- DELIVERY GUIDES ENDPOINTS ---
+
+@app.get("/api/guides")
+def get_guides():
+    try:
+        return db.obtener_guias()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/guides/{gid}")
+def get_guide(gid: int):
+    try:
+        data = db.obtener_guia_detalle(gid)
+        if not data: raise HTTPException(status_code=404, detail="Guide not found")
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/guides")
+def create_guide(data: dict):
+    try:
+        ok, result = db.crear_guia_remision(data)
+        if ok: return {"status": "success", "id": result}
+        else: raise HTTPException(status_code=400, detail=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/warehouses")
 def get_warehouses():
     try:
@@ -488,6 +537,16 @@ def get_tipo_cambio():
 
 # --- HISTORICAL DATA ENDPOINTS ---
 
+@app.post("/api/purchase")
+def create_purchase(data: dict):
+    """Register a new purchase manually"""
+    try:
+        ok, msg = db.registrar_compra(data)
+        if ok: return {"status": "success", "msg": msg}
+        else: raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/purchases/summary")
 def get_purchases_summary():
     """Purchase history summary"""
@@ -521,6 +580,15 @@ def get_transfers_history():
     """Transfer history between warehouses"""
     try:
         df = db.obtener_historial_traslados()
+        return df.fillna("").to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/inventory/kardex/general")
+def get_kardex_general(start_date: str, end_date: str):
+    """General Kardex (all products)"""
+    try:
+        df = db.obtener_kardex_general(start_date, end_date)
         return df.fillna("").to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -574,6 +642,9 @@ def get_template(type: str):
     elif type == 'purchases':
         cols = ['Fecha', 'RUC_Proveedor', 'TipoDoc', 'Serie', 'Numero', 'Moneda', 'Total', 'ProductoSKU', 'Cantidad', 'PrecioUnitario']
         df = pd.DataFrame(columns=cols)
+    elif type == 'initial_stock':
+        cols = ['CodigoSKU', 'Cantidad', 'CostoUnitario']
+        df = pd.DataFrame(columns=cols)
     else:
         raise HTTPException(status_code=400, detail="Invalid template type")
         
@@ -584,7 +655,7 @@ def get_template(type: str):
     return response
 
 @app.post("/api/upload/{type}")
-async def upload_data(type: str, file: UploadFile = File(...)):
+async def upload_data(type: str, file: UploadFile = File(...), almacen_id: int = 1):
     """Process uploaded CSV/Excel file"""
     try:
         contents = await file.read()
@@ -604,6 +675,8 @@ async def upload_data(type: str, file: UploadFile = File(...)):
             msg = db.carga_masiva_proveedores(df)
         elif type == 'purchases':
             msg = db.carga_masiva_compras(df)
+        elif type == 'initial_stock':
+            msg = db.carga_masiva_stock_inicial(df, almacen_id)
         else:
             raise HTTPException(status_code=400, detail="Invalid upload type")
             

@@ -13,6 +13,7 @@ import Movements from './pages/Movements'
 import Orders from './pages/Orders'
 import DataManagement from './pages/DataManagement'
 import Users from './pages/Users'
+import DeliveryGuides from './pages/DeliveryGuides'
 
 function App() {
     return (
@@ -29,6 +30,7 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/inventory" element={<Inventory />} />
                         <Route path="/orders" element={<Orders />} />
+                        <Route path="/guides" element={<DeliveryGuides />} />
                         <Route path="/products" element={<Products />} />
                         <Route path="/purchase" element={<Purchase />} />
                         <Route path="/movements" element={<Movements />} />

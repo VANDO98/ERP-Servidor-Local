@@ -16,6 +16,7 @@ export default function Orders() {
     const [suppliers, setSuppliers] = useState([])
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(false)
+    const [companyConfig, setCompanyConfig] = useState(null)
 
     // Form State
     const [formData, setFormData] = useState({
@@ -23,12 +24,17 @@ export default function Orders() {
         proveedor_id: '',
         fecha: new Date().toISOString().split('T')[0],
         fecha_entrega: new Date().toISOString().split('T')[0],
+        direccion_entrega: '',
         moneda: 'PEN',
         items: []
     })
 
     useEffect(() => {
         fetchAllData()
+        fetch('/company_config.json')
+            .then(res => res.json())
+            .then(data => setCompanyConfig(data))
+            .catch(err => console.error("Error loading config:", err))
     }, [])
 
     const fetchAllData = async () => {
@@ -59,6 +65,12 @@ export default function Orders() {
 
     const handleCreateWrapper = () => {
         resetForm()
+        // Pre-fill address and observations from config
+        setFormData(prev => ({
+            ...prev,
+            direccion_entrega: companyConfig?.company?.address || '',
+            observaciones: companyConfig?.settings?.oc_observaciones || ''
+        }))
         setView('create')
     }
 
@@ -73,6 +85,7 @@ export default function Orders() {
                 proveedor_id: data.proveedor_id,
                 fecha: data.fecha,
                 fecha_entrega: data.fecha_entrega || data.fecha,
+                direccion_entrega: data.direccion_entrega || (companyConfig?.company?.address || ''),
                 moneda: data.moneda,
                 items: data.items.map(i => ({
                     pid: i.pid,
@@ -108,66 +121,153 @@ export default function Orders() {
             const res = await fetch(`http://localhost:8000/api/orders/${orderId}`)
             const data = await res.json()
 
+            // Default config if not loaded
+            const config = companyConfig || {
+                company: { name: "MI EMPRESA S.A.C.", ruc: "20100000000", address: "Av. Principal 123", phone: "-", email: "-" },
+                settings: { tax_name: "IGV", tax_rate: 0.18 }
+            }
+
             const doc = new jsPDF()
+            const taxRate = config.settings.tax_rate || 0.18
+            const taxName = config.settings.tax_name || "IGV"
 
-            // Header: Logo placeholder
-            doc.setFillColor(240, 240, 240)
-            doc.rect(0, 0, 210, 40, 'F')
+            // --- HEADER ---
+            // Left: Company Info
+            doc.setFontSize(14)
+            doc.setFont(undefined, 'bold')
+            doc.text(config.company.name, 14, 20)
 
-            doc.setFontSize(22)
-            doc.setTextColor(40, 40, 40)
-            doc.text("ORDEN DE COMPRA", 105, 25, { align: 'center' })
+            doc.setFontSize(9)
+            doc.setFont(undefined, 'normal')
+            doc.text(config.company.address, 14, 26)
+            doc.text(`RUC: ${config.company.ruc}`, 14, 31)
+            doc.text(`Telf: ${config.company.phone} | Email: ${config.company.email}`, 14, 36)
 
-            // Info Line
+            // Right: PO Details Box
+            doc.setDrawColor(0)
+            doc.setFillColor(245, 245, 245)
+            doc.rect(130, 10, 70, 30, 'F')
+            doc.rect(130, 10, 70, 30, 'S')
+
+            doc.setFontSize(12)
+            doc.setFont(undefined, 'bold')
+            doc.text("ORDEN DE COMPRA", 165, 20, { align: 'center' })
+
             doc.setFontSize(10)
-            doc.setTextColor(0, 0, 0)
-            const yStart = 50
+            doc.setTextColor(200, 0, 0)
+            const serie = config.settings?.oc_serie || 'OC'
+            doc.text(`${serie}-${String(data.id || 0).padStart(6, '0')}`, 165, 28, { align: 'center' })
 
-            doc.setFont(undefined, 'bold')
-            doc.text("DATOS DEL PROVEEDOR:", 14, yStart)
+            doc.setTextColor(0)
+            doc.setFontSize(9)
             doc.setFont(undefined, 'normal')
-            doc.text(data.proveedor_nombre || "N/A", 14, yStart + 5)
-            doc.text(`RUC: ${data.proveedor_ruc || '-'}`, 14, yStart + 10)
+            doc.text(`Fecha: ${data.fecha}`, 165, 36, { align: 'center' })
 
+            // --- PROVIDER INFO ---
+            const yProv = 55
+            doc.setDrawColor(200)
+            doc.line(14, yProv - 5, 196, yProv - 5)
+
+            doc.setFontSize(10)
             doc.setFont(undefined, 'bold')
-            doc.text("DETALLES OC:", 140, yStart)
-            doc.setFont(undefined, 'normal')
-            doc.text(`Número: OC-${String(data.id || 0).padStart(6, '0')}`, 140, yStart + 5)
-            doc.text(`Fecha Emisión: ${data.fecha || '-'}`, 140, yStart + 10)
-            doc.text(`Fecha Entrega: ${data.fecha_entrega || '-'}`, 140, yStart + 15)
-            doc.text(`Moneda: ${data.moneda || 'PEN'}`, 140, yStart + 20)
+            doc.text("DATOS DEL PROVEEDOR:", 14, yProv)
 
-            // Table
-            const columns = ["#", "Producto", "Cant.", "U.M.", "P. Unit (S/ IGV)", "Total"]
+            doc.setFontSize(9)
+            doc.setFont(undefined, 'normal')
+            doc.text(`Razón Social: ${data.proveedor_nombre || "N/A"}`, 14, yProv + 6)
+            doc.text(`RUC: ${data.proveedor_ruc || '-'}`, 14, yProv + 11)
+            doc.text(`Dirección: ${data.proveedor_direccion || '-'}`, 14, yProv + 16)
+
+            // --- SHIPPING INFO (Right side) ---
+            doc.setFont(undefined, 'bold')
+            doc.text("LUGAR DE ENTREGA:", 110, yProv)
+            doc.setFont(undefined, 'normal')
+            doc.text(data.direccion_entrega || config.company.address, 110, yProv + 6)
+            doc.text(`Fecha Entrega: ${data.fecha_entrega || '-'}`, 110, yProv + 11)
+            doc.text(`Moneda: ${data.moneda || 'PEN'}`, 110, yProv + 16)
+
+            // --- TABLE ---
+            const columns = ["#", "Producto", "Cant.", "U.M.", "P. Unit", "Total"]
             const rows = (data.items || []).map((item, idx) => [
                 idx + 1,
                 item.Producto || 'Item',
                 Number(item.cantidad || 0).toFixed(2),
-                item.um || 'NIU',
+                item.um || 'UN',
                 Number(item.precio_unitario || 0).toFixed(2),
                 (Number(item.cantidad || 0) * Number(item.precio_unitario || 0)).toFixed(2)
             ])
 
             autoTable(doc, {
-                startY: yStart + 30,
+                startY: yProv + 25,
                 head: [columns],
                 body: rows,
-                theme: 'striped',
-                headStyles: { fillColor: [41, 128, 185] },
-                styles: { fontSize: 9 }
+                theme: 'grid',
+                headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: 'center' },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 10 },
+                    2: { halign: 'right' },
+                    3: { halign: 'center' },
+                    4: { halign: 'right' },
+                    5: { halign: 'right' }
+                },
+                styles: { fontSize: 9, cellPadding: 2 }
             })
 
-            const finalY = (doc.lastAutoTable?.finalY || yStart + 30) + 10
+            const finalY = (doc.lastAutoTable?.finalY || yProv + 30) + 10
 
-            // Totals
-            doc.setFontSize(11)
-            doc.setFont(undefined, 'bold')
+            // --- TOTALS ---
+            const total = Number(data.total || 0)
+            const subtotal = total / (1 + taxRate)
+            const igv = total - subtotal
             const symbol = data.moneda === 'USD' ? '$' : 'S/'
-            doc.text(`Total General: ${symbol} ${Number(data.total || 0).toFixed(2)}`, 190, finalY, { align: 'right' })
 
-            // Footer
+            const xLabel = 140
+            const xValue = 190
+
+            doc.setFontSize(10)
+            doc.text("Subtotal:", xLabel, finalY)
+            doc.text(`${symbol} ${subtotal.toFixed(2)}`, xValue, finalY, { align: 'right' })
+
+            doc.text(`${taxName} (${(taxRate * 100).toFixed(0)}%):`, xLabel, finalY + 6)
+            doc.text(`${symbol} ${igv.toFixed(2)}`, xValue, finalY + 6, { align: 'right' })
+
+            doc.setFontSize(12)
+            doc.setFont(undefined, 'bold')
+            doc.setDrawColor(0)
+            doc.line(xLabel - 5, finalY + 10, 196, finalY + 10)
+
+            doc.text("TOTAL:", xLabel, finalY + 16)
+            doc.text(`${symbol} ${total.toFixed(2)}`, xValue, finalY + 16, { align: 'right' })
+
+            // --- FOOTER ---
+            // Observations
+            if (data.observaciones) {
+                doc.setFontSize(9)
+                doc.setFont(undefined, 'bold')
+                doc.text("Observaciones:", 14, finalY + 25)
+                doc.setFont(undefined, 'normal')
+                doc.text(data.observaciones, 14, finalY + 30)
+            }
+
+            // Signatures
+            const ySig = 250
+            doc.setDrawColor(100)
+            doc.line(30, ySig, 90, ySig)
+            doc.line(120, ySig, 180, ySig)
+
             doc.setFontSize(8)
-            doc.text("Documento generado por ERP Moderno v2", 105, 280, { align: 'center' })
+            doc.text("Elaborado por", 60, ySig + 5, { align: 'center' })
+            doc.text("Aprobado por", 150, ySig + 5, { align: 'center' })
+
+            // Page Number / Watermark
+            const pageCount = doc.internal.getNumberOfPages()
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i)
+                doc.setFontSize(8)
+                doc.setTextColor(150)
+                doc.text(`Página ${i} de ${pageCount}`, 196, 285, { align: 'right' })
+                doc.text("Generado por ERP Moderno", 14, 285)
+            }
 
             window.open(doc.output('bloburl'), '_blank')
         } catch (error) {
@@ -262,6 +362,9 @@ export default function Orders() {
         try {
             await api.updateOrderStatus(id, status)
             fetchAllData()
+            if (selectedOrder && selectedOrder.id === id) {
+                setSelectedOrder({ ...selectedOrder, estado: status })
+            }
         } catch (error) {
             alert(error.message)
         }
@@ -302,7 +405,9 @@ export default function Orders() {
                                 {orders.length > 0 ? (
                                     orders.map((order) => (
                                         <tr key={order.id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 font-mono text-xs">OC-{String(order.id).padStart(6, '0')}</td>
+                                            <td className="px-6 py-4 font-mono text-xs">
+                                                {(companyConfig?.settings?.oc_serie || 'OC')}-{String(order.id).padStart(6, '0')}
+                                            </td>
                                             <td className="px-6 py-4 font-medium">{order.proveedor_nombre}</td>
                                             <td className="px-6 py-4 text-slate-600">{order.fecha}</td>
                                             <td className="px-6 py-4 font-bold text-slate-800">
@@ -321,6 +426,11 @@ export default function Orders() {
                                                 <button onClick={() => handleViewDetail(order.id)} className="p-1 text-slate-400 hover:text-slate-600" title="Ver Detalle">
                                                     <Eye size={16} />
                                                 </button>
+                                                {order.estado === 'PENDIENTE' && (
+                                                    <button onClick={() => handleEdit(order.id)} className="p-1 text-slate-400 hover:text-blue-600" title="Editar">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                )}
                                                 {order.estado === 'PENDIENTE' && (
                                                     <button onClick={() => handleStatusChange(order.id, 'APROBADA')} className="p-1 text-blue-400 hover:text-blue-600" title="Aprobar">
                                                         <Check size={16} />
@@ -371,6 +481,10 @@ export default function Orders() {
                                 <input type="date" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.fecha_entrega} onChange={e => setFormData({ ...formData, fecha_entrega: e.target.value })} />
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Lugar de Entrega</label>
+                                <input type="text" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.direccion_entrega} onChange={e => setFormData({ ...formData, direccion_entrega: e.target.value })} placeholder="Dirección de entrega" />
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Moneda</label>
                                 <select className="w-full p-2 border border-slate-200 rounded-lg" value={formData.moneda} onChange={e => setFormData({ ...formData, moneda: e.target.value })}>
                                     <option value="PEN">Soles (PEN)</option>
@@ -411,6 +525,12 @@ export default function Orders() {
                                                 className="w-full p-2 border border-slate-200 rounded"
                                                 value={item.cantidad}
                                                 onChange={(e) => updateItem(index, 'cantidad', e.target.value)}
+                                                onBlur={(e) => {
+                                                    const val = parseFloat(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        updateItem(index, 'cantidad', val.toFixed(2));
+                                                    }
+                                                }}
                                                 required
                                             />
                                         </td>
@@ -457,6 +577,16 @@ export default function Orders() {
                         <button type="button" onClick={addRow} className="flex items-center text-blue-600 font-medium hover:text-blue-700">
                             <Plus size={16} className="mr-1" /> Agregar Item
                         </button>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Observaciones / Condiciones</label>
+                        <textarea
+                            className="w-full p-2 border border-slate-200 rounded-lg h-24"
+                            value={formData.observaciones}
+                            onChange={e => setFormData({ ...formData, observaciones: e.target.value })}
+                            placeholder="Ingrese observaciones, condiciones de pago, lugar de entrega, etc."
+                        ></textarea>
                     </div>
 
                     <div className="flex justify-end gap-3">

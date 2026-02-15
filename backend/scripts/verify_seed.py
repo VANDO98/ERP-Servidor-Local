@@ -1,7 +1,10 @@
 import sqlite3
 import os
 
-db_path = os.path.join("..", "data", "gestion_basica.db")
+# Resolve path relative to script location
+current_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(current_dir)
+db_path = os.path.join(backend_dir, "data", "gestion_basica.db")
 
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()

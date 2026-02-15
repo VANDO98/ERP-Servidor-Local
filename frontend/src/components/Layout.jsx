@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, Package, ShoppingCart, Truck, Boxes, Menu, X, Settings, LogOut, ClipboardList, Database, Users as UsersIcon } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Truck, Boxes, Menu, X, Settings, LogOut, ClipboardList, Database, Users as UsersIcon, ScrollText } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Outlet } from 'react-router-dom'
@@ -49,6 +49,7 @@ export default function Layout() {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'inventory', label: 'Inventario', icon: Package },
         { id: 'orders', label: 'Ordenes de Compra', icon: ClipboardList },
+        { id: 'guides', label: 'Guías de Remisión', icon: ScrollText },
         { id: 'purchase', label: 'Compras', icon: ShoppingCart },
         { id: 'movements', label: 'Movimientos', icon: Truck },
         { id: 'products', label: 'Productos', icon: Boxes },
@@ -105,8 +106,8 @@ export default function Layout() {
                                     key={item.id}
                                     onClick={() => handleNavigate(item.id)}
                                     className={`w-full flex items-center space-x-3 px-4 py-2 pl-12 rounded-lg transition-colors duration-200 text-sm ${currentPath === item.id
-                                            ? 'text-blue-400 font-medium'
-                                            : 'text-slate-500 hover:text-slate-300'
+                                        ? 'text-blue-400 font-medium'
+                                        : 'text-slate-500 hover:text-slate-300'
                                         }`}
                                 >
                                     <item.icon size={16} />

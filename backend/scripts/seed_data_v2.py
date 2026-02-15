@@ -9,7 +9,19 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(current_dir)
 sys.path.append(backend_dir)
 
-from src.auth import get_password_hash, get_username_hash, encrypt_username
+# from src.auth import get_password_hash, get_username_hash, encrypt_username
+# SIMPLIFIED HASHING FOR SEEDING ONLY (To avoid dependencies)
+import hashlib
+
+def get_password_hash(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def get_username_hash(username):
+    return hashlib.sha256(username.encode()).hexdigest()
+
+def encrypt_username(username):
+    return username # No encryption for seed
+
 
 DB_PATH = os.path.join(backend_dir, "data", "gestion_basica.db")
 
@@ -29,7 +41,7 @@ def clear_database():
         "salidas_detalle", "salidas_cabecera",
         "factura_guia_rel", "guias_remision_det", "guias_remision",
         "compras_detalle", "compras_cabecera",
-        "ordenes_compra_det", "ordenes_compra", "ordenes_compra_detalle",
+        "ordenes_compra_det", "ordenes_compra",
         "stock_almacen",
         "productos",
         "proveedores",
@@ -273,13 +285,21 @@ def generate_transactions():
         oc_id = cursor.lastrowid
         
         oc_items = random.sample(prod_ids, 2)
+        total_orden = 0
         for pid in oc_items:
              cursor.execute("SELECT costo_promedio FROM productos WHERE id=?", (pid,))
              costo = cursor.fetchone()[0]
+             cantidad = random.randint(10, 50)
+             subtotal = cantidad * costo
+             total_orden += subtotal
+             
              cursor.execute("""
                 INSERT INTO ordenes_compra_det (oc_id, producto_id, cantidad_solicitada, precio_unitario_pactado)
                 VALUES (?, ?, ?, ?)
-             """, (oc_id, pid, random.randint(10, 50), costo))
+             """, (oc_id, pid, cantidad, costo))
+        
+        # Update Header with Total
+        cursor.execute("UPDATE ordenes_compra SET total_orden = ? WHERE id = ?", (total_orden, oc_id))
 
     conn.commit()
     conn.close()

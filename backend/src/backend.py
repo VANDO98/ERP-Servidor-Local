@@ -1079,6 +1079,90 @@ def obtener_kardex_producto(producto_id, start_date=None, end_date=None):
     conn.close()
     return df
 
+def obtener_kardex_general(start_date, end_date):
+    """Retorna Kardex General (todos los productos) en rango de fechas"""
+    conn = get_connection()
+    
+    # Compras
+    q_compras = """
+        SELECT 
+            cc.fecha_emision as Fecha,
+            p.nombre as Producto,
+            'COMPRA' as TipoMovimiento,
+            cc.numero as Documento,
+            'Proveedor' as OrigenDestino,
+            cd.cantidad as Entradas,
+            0 as Salidas
+        FROM compras_detalle cd
+        JOIN compras_cabecera cc ON cd.compra_id = cc.id
+        JOIN productos p ON cd.producto_id = p.id
+        WHERE cc.fecha_emision BETWEEN ? AND ?
+    """
+    
+    # Salidas
+    q_salidas = """
+        SELECT 
+            sc.fecha as Fecha,
+            p.nombre as Producto,
+            'SALIDA' as TipoMovimiento,
+            'Salida #' || sc.id as Documento,
+            sc.destino as OrigenDestino,
+            0 as Entradas,
+            sd.cantidad as Salidas
+        FROM salidas_detalle sd
+        JOIN salidas_cabecera sc ON sd.salida_id = sc.id
+        JOIN productos p ON sd.producto_id = p.id
+        WHERE sc.fecha BETWEEN ? AND ?
+    """
+    
+    # Traslados Salida
+    q_tras_sal = """
+        SELECT 
+            tc.fecha as Fecha,
+            p.nombre as Producto,
+            'TRASLADO SALIDA' as TipoMovimiento,
+            'Traslado #' || tc.id as Documento,
+            'A: ' || ad.nombre as OrigenDestino,
+            0 as Entradas,
+            td.cantidad as Salidas
+        FROM traslados_detalle td
+        JOIN traslados_cabecera tc ON td.traslado_id = tc.id
+        JOIN productos p ON td.producto_id = p.id
+        JOIN almacenes ad ON tc.destino_id = ad.id
+        WHERE tc.fecha BETWEEN ? AND ?
+    """
+    
+    # Traslados Entrada
+    q_tras_ent = """
+        SELECT 
+            tc.fecha as Fecha,
+            p.nombre as Producto,
+            'TRASLADO ENTRADA' as TipoMovimiento,
+            'Traslado #' || tc.id as Documento,
+            'De: ' || ao.nombre as OrigenDestino,
+            td.cantidad as Entradas,
+            0 as Salidas
+        FROM traslados_detalle td
+        JOIN traslados_cabecera tc ON td.traslado_id = tc.id
+        JOIN productos p ON td.producto_id = p.id
+        JOIN almacenes ao ON tc.origen_id = ao.id
+        WHERE tc.fecha BETWEEN ? AND ?
+    """
+    
+    full_query = f"{q_compras} UNION ALL {q_salidas} UNION ALL {q_tras_sal} UNION ALL {q_tras_ent} ORDER BY Fecha DESC"
+    
+    params = [start_date, end_date] * 4
+    
+    try:
+        df = pd.read_sql(full_query, conn, params=params)
+        df['Saldo'] = 0 # No calculated balance for general view
+    except Exception as e:
+        print(f"Error kardex general: {e}")
+        df = pd.DataFrame(columns=['Fecha', 'Producto', 'TipoMovimiento', 'Documento', 'OrigenDestino', 'Entradas', 'Salidas', 'Saldo'])
+        
+    conn.close()
+    return df
+
 def obtener_compras_historial():
     """Retorna historial de cabeceras de compra"""
     return obtener_historial_compras()
@@ -1180,6 +1264,11 @@ def obtener_compras_detalle_historial():
     conn.close()
     return df
 
+def obtener_detalle_compras():
+    """Alias for obtener_compras_detalle_historial"""
+    return obtener_compras_detalle_historial()
+
+
 def verificar_factura_duplicada(serie, numero, proveedor_id):
     """Verifica si existe una factura con la misma serie/numero/proveedor"""
     conn = get_connection()
@@ -1201,7 +1290,7 @@ def generar_correlativo_oc():
     conn.close()
     return (max_id or 0) + 1
 
-def crear_orden_compra_con_correlativo(proveedor_id, fecha_emision, fecha_entrega_estimada, moneda, tasa_igv, observaciones, items):
+def crear_orden_compra_con_correlativo(proveedor_id, fecha_emision, fecha_entrega_estimada, moneda, tasa_igv, observaciones, items, direccion_entrega=None):
     """Crea una orden de compra con correlativo auto-generado"""
     conn = get_connection()
     cursor = conn.cursor()
@@ -1215,20 +1304,21 @@ def crear_orden_compra_con_correlativo(proveedor_id, fecha_emision, fecha_entreg
         cursor.execute("""
             INSERT INTO ordenes_compra (
                 proveedor_id, fecha_emision, fecha_entrega_est,
-                moneda, estado, total_orden, tasa_igv, observaciones
-            ) VALUES (?, ?, ?, ?, 'PENDIENTE', ?, ?, ?)
+                moneda, estado, total_orden, tasa_igv, observaciones, direccion_entrega
+            ) VALUES (?, ?, ?, ?, 'PENDIENTE', ?, ?, ?, ?)
         """, (
             proveedor_id, fecha_emision, fecha_entrega_estimada,
-            moneda, total_orden, tasa_igv, observaciones
+            moneda, total_orden, tasa_igv, observaciones, direccion_entrega
         ))
         
         orden_id = cursor.lastrowid
         
         # Insert details
+        # Insert details
         for item in items:
             cursor.execute("""
-                INSERT INTO ordenes_compra_detalle (
-                    orden_id, producto_id, cantidad, precio_unitario
+                INSERT INTO ordenes_compra_det (
+                    oc_id, producto_id, cantidad_solicitada, precio_unitario_pactado
                 ) VALUES (?, ?, ?, ?)
             """, (
                 orden_id, item['pid'], item['cantidad'], item['precio_unitario']
@@ -1353,7 +1443,9 @@ def obtener_productos_extendido():
 def obtener_compras_por_categoria(start_date, end_date):
     return obtener_gastos_por_categoria(start_date, end_date)
 
-def obtener_historial_compras():
+    return df
+
+def obtener_compras_historial():
     conn = get_connection()
     query = """
         SELECT 
@@ -1363,7 +1455,8 @@ def obtener_historial_compras():
             p.razon_social as proveedor, 
             c.moneda, 
             c.total_compra as total_final,
-            (SELECT COUNT(*) FROM compras_detalle WHERE compra_id = c.id) as items
+            (SELECT COUNT(*) FROM compras_detalle WHERE compra_id = c.id) as items,
+            c.oc_id
         FROM compras_cabecera c
         JOIN proveedores p ON c.proveedor_id = p.id
         ORDER BY c.fecha_emision DESC, c.id DESC
@@ -1393,6 +1486,124 @@ def obtener_ordenes_compra():
     df = pd.read_sql(query, conn)
     conn.close()
     return df
+
+    return df
+    
+def registrar_compra(data):
+    """
+    Registra una compra manual.
+    data: {
+        proveedor_id, fecha, moneda, serie, numero, tc, tasa_igv, 
+        items: [{pid, cantidad, precio_unitario, um}],
+        orden_compra_id (optional)
+    }
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # 0. Quick Check: Avoid Duplicates (Robust: Case-Insensitive, Ignore Leading Zeros)
+        cursor.execute("SELECT serie, numero FROM compras_cabecera WHERE proveedor_id=?", (data['proveedor_id'],))
+        existing_docs = cursor.fetchall()
+        
+        target_serie = str(data['serie']).strip().upper().lstrip('0')
+        target_numero = str(data['numero']).strip().upper().lstrip('0')
+        
+        for s, n in existing_docs:
+            existing_serie = str(s).strip().upper().lstrip('0')
+            existing_numero = str(n).strip().upper().lstrip('0')
+            
+            if existing_serie == target_serie and existing_numero == target_numero:
+                 return False, f"Error: Ya existe una compra registrada con esa Serie ({data['serie']}) y Número ({data['numero']}) para este proveedor."
+
+        # 1. Calcular Totales
+        total_compra = 0
+        detalles_compra = [] # (pid, qty, price, subtotal, p_obj)
+        
+        tc_actual = data.get('tc', 3.85)
+        moneda = data.get('moneda', 'PEN')
+        
+        for item in data['items']:
+            pid = int(item['pid'])
+            qty = float(item['cantidad'])
+            price = float(item['precio_unitario'])
+            
+            subtotal = qty * price
+            total_compra += subtotal
+            
+            # Get product info (costo prev)
+            cursor.execute("SELECT nombre, unidad_medida, costo_promedio FROM productos WHERE id=?", (pid,))
+            p_data = cursor.fetchone()
+            if not p_data: raise Exception(f"Producto ID {pid} no existe")
+            
+            detalles_compra.append({
+                'pid': pid, 'qty': qty, 'price': price, 'subtotal': subtotal,
+                'p_nom': p_data[0], 'p_um': p_data[1], 'p_costo_prev': p_data[2]
+            })
+            
+        base = round(total_compra / (1 + (data.get('tasa_igv', 18)/100)), 2)
+        igv = round(total_compra - base, 2)
+        
+        # 2. Insert Header
+        cursor.execute("""
+            INSERT INTO compras_cabecera (
+                proveedor_id, fecha_emision, tipo_documento, serie, numero, 
+                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, oc_id
+            )
+            VALUES (?, ?, 'FACTURA', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+        """, (
+            data['proveedor_id'], data['fecha'], data['serie'], data['numero'],
+            moneda, total_compra, base, igv, tc_actual, data.get('orden_compra_id')
+        ))
+        compra_id = cursor.lastrowid
+        
+        # 3. Insert Details & Update Stock
+        for d in detalles_compra:
+            # Insert Detalle
+            cursor.execute("""
+                INSERT INTO compras_detalle (
+                    compra_id, producto_id, descripcion, unidad_medida, cantidad, 
+                    precio_unitario, subtotal, costo_previo, tasa_impuesto, almacen_id
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            """, (
+                compra_id, d['pid'], d['p_nom'], d['p_um'], d['qty'], 
+                d['price'], d['subtotal'], d['p_costo_prev'], data.get('tasa_igv', 18)
+            ))
+            
+            # Update Stock & Cost
+            # Get current stock in warehouse 1
+            cursor.execute("SELECT id, stock_actual FROM stock_almacen WHERE producto_id=? AND almacen_id=1", (d['pid'],))
+            row_st = cursor.fetchone()
+            
+            price_pen = d['price'] * tc_actual if moneda == 'USD' else d['price']
+            qty = d['qty']
+            p_costo_prev = d['p_costo_prev']
+            
+            if row_st:
+                sid, st_curr = row_st
+                new_st = st_curr + qty
+                # Weighted Average Cost
+                new_cost = ((st_curr * p_costo_prev) + (qty * price_pen)) / new_st if new_st > 0 else p_costo_prev
+                
+                cursor.execute("UPDATE stock_almacen SET stock_actual=? WHERE id=?", (new_st, sid))
+                cursor.execute("UPDATE productos SET costo_promedio=?, stock_actual=stock_actual+? WHERE id=?", (new_cost, qty, d['pid']))
+            else:
+                # First time stock
+                new_cost = price_pen
+                cursor.execute("INSERT INTO stock_almacen (producto_id, almacen_id, stock_actual) VALUES (?, 1, ?)", (d['pid'], qty))
+                cursor.execute("UPDATE productos SET costo_promedio=?, stock_actual=stock_actual+? WHERE id=?", (new_cost, qty, d['pid']))
+
+        # 4. Update OC status if linked
+        if data.get('orden_compra_id'):
+             cursor.execute("UPDATE ordenes_compra SET estado='FACTURADA' WHERE id=?", (data.get('orden_compra_id'),))
+
+        conn.commit()
+        return True, "Compra registrada correctamente"
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
 
 def calcular_valorizado_fifo(incluir_igv=True):
     """
@@ -1895,7 +2106,7 @@ def actualizar_orden_compra(oc_id, data):
         """, (data['proveedor_id'], data['fecha'], data.get('fecha_entrega'), data['moneda'], data.get('tasa_igv', 18), oc_id))
         
         # Re-create Details
-        cursor.execute("DELETE FROM ordenes_compra_detalle WHERE orden_id=?", (oc_id,))
+        cursor.execute("DELETE FROM ordenes_compra_det WHERE oc_id=?", (oc_id,))
         
         total_orden = 0
         for item in data['items']:
@@ -1905,7 +2116,7 @@ def actualizar_orden_compra(oc_id, data):
             total_orden += qty * price
             
             cursor.execute("""
-                INSERT INTO ordenes_compra_detalle (orden_id, producto_id, cantidad, precio_unitario)
+                INSERT INTO ordenes_compra_det (oc_id, producto_id, cantidad_solicitada, precio_unitario_pactado)
                 VALUES (?, ?, ?, ?)
             """, (oc_id, pid, qty, price))
             
@@ -1935,8 +2146,8 @@ def actualizar_orden_compra(oc_id, data):
         
         # 2. Obtener Detalles OC
         cursor.execute("""
-            SELECT producto_id, cantidad, precio_unitario 
-            FROM ordenes_compra_detalle WHERE orden_id = ?
+            SELECT producto_id, cantidad_solicitada, precio_unitario_pactado 
+            FROM ordenes_compra_det WHERE oc_id = ?
         """, (oc_id,))
         rows_det = cursor.fetchall()
         
@@ -1963,10 +2174,10 @@ def actualizar_orden_compra(oc_id, data):
         cursor.execute("""
             INSERT INTO compras_cabecera (
                 proveedor_id, fecha_emision, tipo_documento, serie, numero, 
-                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro
+                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, oc_id
             )
-            VALUES (?, ?, 'FACTURA', ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (prov_id, fecha_emision, serie, numero, moneda, total_compra, base, igv, tc_actual, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            VALUES (?, ?, 'FACTURA', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (prov_id, fecha_emision, serie, numero, moneda, total_compra, base, igv, tc_actual, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), oc_id))
         compra_id = cursor.lastrowid
         
         # Insertar Detalles y Mover Stock
@@ -2019,8 +2230,8 @@ def obtener_orden_compra(oc_id):
     try:
         # Cabecera
         query_cab = """
-            SELECT oc.id, oc.proveedor_id, p.razon_social, p.ruc, oc.fecha_emision, 
-                   oc.fecha_entrega_estimada, oc.moneda, oc.tasa_igv, oc.estado, oc.total_orden, oc.observaciones
+            SELECT oc.id, oc.proveedor_id, p.razon_social, p.ruc_dni as ruc, p.direccion as proveedor_direccion, oc.fecha_emision, 
+                   oc.fecha_entrega_est as fecha_entrega_estimada, oc.moneda, oc.tasa_igv, oc.estado, oc.total_orden, oc.observaciones, oc.direccion_entrega
             FROM ordenes_compra oc
             JOIN proveedores p ON oc.proveedor_id = p.id
             WHERE oc.id = ?
@@ -2032,32 +2243,16 @@ def obtener_orden_compra(oc_id):
             
         cab = df_cab.iloc[0].to_dict()
         
-        # Detalles - STRATEGY 1: New Schema (ordenes_compra_detalle)
-        query_det_new = """
-            SELECT od.producto_id as pid, pr.nombre as Producto, pr.unidad_medida as um,
-                   od.cantidad as cantidad, od.precio_unitario as precio_unitario
-            FROM ordenes_compra_detalle od
-            JOIN productos pr ON od.producto_id = pr.id
-            WHERE od.orden_id = ?
-        """
-        df_det = pd.read_sql(query_det_new, conn, params=(oc_id,))
         
-        # Detalles - STRATEGY 2: Legacy Schema (ordenes_compra_det) -> Fallback
-        if df_det.empty:
-            try:
-                query_det_legacy = """
-                    SELECT od.producto_id as pid, pr.nombre as Producto, pr.unidad_medida as um,
-                           od.cantidad_solicitada as cantidad, od.precio_unitario_pactado as precio_unitario
-                    FROM ordenes_compra_det od
-                    JOIN productos pr ON od.producto_id = pr.id
-                    WHERE od.oc_id = ?
-                """
-                df_det_legacy = pd.read_sql(query_det_legacy, conn, params=(oc_id,))
-                if not df_det_legacy.empty:
-                    df_det = df_det_legacy
-            except Exception:
-                # If table doesn't exist, ignore
-                pass
+        # Detalles - STRATEGY: Legacy Schema (ordenes_compra_det)
+        query_det = """
+            SELECT od.producto_id as pid, pr.nombre as Producto, pr.unidad_medida as um,
+                   od.cantidad_solicitada as cantidad, od.precio_unitario_pactado as precio_unitario
+            FROM ordenes_compra_det od
+            JOIN productos pr ON od.producto_id = pr.id
+            WHERE od.oc_id = ?
+        """
+        df_det = pd.read_sql(query_det, conn, params=(oc_id,))
         
         items = df_det.fillna(0).to_dict(orient='records')
         
@@ -2124,5 +2319,270 @@ def obtener_productos_extendido():
         """
         df = pd.read_sql(query, conn)
         return df
+    finally:
+        conn.close()
+
+def carga_masiva_stock_inicial(df, almacen_id):
+    """
+    Carga masiva de inventario inicial por almacén.
+    Columns: CodigoSKU, Cantidad, CostoUnitario
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    log_errors = []
+    processed = 0
+    updated_products = 0
+    
+    try:
+        # Expected columns validation - Case Insensitive for user friendliness
+        # Map input columns to required
+        cols_map = {c.lower(): c for c in df.columns}
+        req_sku = cols_map.get('codigosku') or cols_map.get('sku')
+        req_qty = cols_map.get('cantidad') or cols_map.get('stock')
+        req_cost = cols_map.get('costounitario') or cols_map.get('costo')
+        
+        if not (req_sku and req_qty and req_cost):
+             return "Error: El archivo debe tener las columnas: CodigoSKU, Cantidad, CostoUnitario"
+             
+        # Process ROW by ROW
+        for index, row in df.iterrows():
+            sku = str(row[req_sku]).strip()
+            
+            try:
+                qty = float(row[req_qty])
+                cost = float(row[req_cost])
+            except ValueError:
+                log_errors.append(f"Fila {index+2}: Cantidad o Costo inválido")
+                continue
+            
+            # Find Product
+            cursor.execute("SELECT id, stock_actual, costo_promedio FROM productos WHERE codigo_sku = ?", (sku,))
+            prod = cursor.fetchone()
+            
+            if not prod:
+                log_errors.append(f"Fila {index+2}: SKU {sku} no encontrado")
+                continue
+                
+            pid = prod[0]
+            
+            # 1. Update/Insert Stock in Almacen
+            cursor.execute("SELECT id, stock_actual FROM stock_almacen WHERE producto_id=? AND almacen_id=?", (pid, almacen_id))
+            stock_row = cursor.fetchone()
+            
+            old_stock_almacen = 0.0
+            if stock_row:
+                old_stock_almacen = stock_row[1]
+                # Update existing record
+                cursor.execute("UPDATE stock_almacen SET stock_actual = ? WHERE id=?", (qty, stock_row[0]))
+            else:
+                # Insert new record
+                cursor.execute("INSERT INTO stock_almacen (producto_id, almacen_id, stock_actual) VALUES (?, ?, ?)", (pid, almacen_id, qty))
+                
+            # 2. Update Product Global Stock (Re-calculate from all warehouses to be safe)
+            # Or just Add Difference?
+            # Safer: Recalculate global stock for this product from stock_almacen table
+            # But we are inside a loop, maybe heavy? Just delta is fine if concurrency is low.
+            # Local deployment -> Low concurrency. Delta is fine.
+            diff = qty - old_stock_almacen
+            cursor.execute("UPDATE productos SET stock_actual = stock_actual + ? WHERE id=?", (diff, pid))
+            
+            # 3. Update Average Cost if provided and > 0
+            if cost > 0:
+                cursor.execute("UPDATE productos SET costo_promedio = ? WHERE id=?", (cost, pid))
+                
+            processed += 1
+            
+        conn.commit()
+        
+        msg = f"Carga Exitosa. {processed} productos actualizados."
+        if log_errors:
+             msg += f" Errores ({len(log_errors)}): {'; '.join(log_errors[:3])}..."
+        return msg
+        
+    except Exception as e:
+        conn.rollback()
+        return f"Error en carga masiva: {str(e)}"
+    finally:
+        conn.close()
+
+# --- GESTION DE GUIAS DE REMISION ---
+
+def crear_guia_remision(data):
+    """
+    Registra una guía de remisión vinculada a una OC.
+    data expected:
+    {
+        "proveedor_id": int,
+        "oc_id": int,
+        "numero_guia": str,
+        "fecha_recepcion": str (YYYY-MM-DD),
+        "items": [
+            {"pid": int, "cantidad": float, "almacen_id": int (optional)}
+        ],
+        "observaciones": str (optional)
+    }
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Check duplicate guide for provider
+        cursor.execute("SELECT id FROM guias_remision WHERE proveedor_id=? AND numero_guia=?", 
+                      (data['proveedor_id'], data['numero_guia']))
+        if cursor.fetchone():
+            return False, f"Ya existe la guía {data['numero_guia']} para este proveedor"
+
+        # 1. Insert Header
+        cursor.execute("""
+            INSERT INTO guias_remision (proveedor_id, oc_id, numero_guia, fecha_recepcion)
+            VALUES (?, ?, ?, ?)
+        """, (data['proveedor_id'], data.get('oc_id'), data['numero_guia'], data['fecha_recepcion']))
+        
+        guia_id = cursor.lastrowid
+        
+        # 2. Insert Details
+        for item in data['items']:
+            # verify product exists
+            cursor.execute("SELECT id FROM productos WHERE id=?", (item['pid'],))
+            if not cursor.fetchone():
+                raise Exception(f"Producto ID {item['pid']} no encontrado")
+            
+            # Default warehouse could be 1 if not specified
+            almacen_id = item.get('almacen_id', 1) 
+            
+            cursor.execute("""
+                INSERT INTO guias_remision_det (guia_id, producto_id, cantidad_recibida, almacen_destino_id)
+                VALUES (?, ?, ?, ?)
+            """, (guia_id, item['pid'], item['cantidad'], almacen_id))
+            
+        conn.commit()
+        return True, guia_id
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+def obtener_guias():
+    conn = get_connection()
+    # Check if table exists just in case (though we checked via python earlier)
+    # The previous check confirmed table exists.
+    query = """
+        SELECT 
+            g.id,
+            g.fecha_recepcion,
+            g.numero_guia,
+            p.razon_social as proveedor,
+            g.oc_id,
+            (SELECT COUNT(*) FROM guias_remision_det WHERE guia_id = g.id) as items_count
+        FROM guias_remision g
+        JOIN proveedores p ON g.proveedor_id = p.id
+        ORDER BY g.fecha_recepcion DESC
+    """
+    try:
+        df = pd.read_sql(query, conn)
+        return df.to_dict(orient='records')
+    except Exception as e:
+        print(f"Error fetching guias: {e}")
+        return []
+    finally:
+        conn.close()
+
+def obtener_guia_detalle(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Header
+        cursor.execute("""
+            SELECT g.*, p.razon_social, p.ruc_dni
+            FROM guias_remision g
+            JOIN proveedores p ON g.proveedor_id = p.id
+            WHERE g.id = ?
+        """, (id,))
+        header = cursor.fetchone()
+        
+        if not header:
+            return None
+        
+        # Get column names for header
+        header_cols = [description[0] for description in cursor.description]
+        header_dict = dict(zip(header_cols, header))
+        
+        # Items
+        cursor.execute("""
+            SELECT d.*, p.nombre as producto, p.unidad_medida
+            FROM guias_remision_det d
+            JOIN productos p ON d.producto_id = p.id
+            WHERE d.guia_id = ?
+        """, (id,))
+        
+        item_cols = [description[0] for description in cursor.description]
+        items = [dict(zip(item_cols, row)) for row in cursor.fetchall()]
+        
+        return {
+            **header_dict,
+            "items": items
+        }
+    except Exception as e:
+        print(F"Error detail guia: {e}")
+        return None
+    finally:
+        conn.close()
+
+def obtener_saldo_oc(oc_id):
+    """
+    Retorna los items de la OC con la cantidad pendiente de recepción.
+    Calcula: Cantidad Solicitada (OC) - Sum(Cantidad Recibida en Guias)
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # 1. Get OC Items
+        cursor.execute("SELECT id, producto_id, cantidad FROM ordenes_compra_det WHERE oc_id=?", (oc_id,))
+        oc_items = cursor.fetchall() # [(id, pid, qty), ...]
+        
+        # 2. Get Received Items for this OC
+        cursor.execute("""
+            SELECT d.producto_id, SUM(d.cantidad_recibida)
+            FROM guias_remision_det d
+            JOIN guias_remision g ON d.guia_id = g.id
+            WHERE g.oc_id = ?
+            GROUP BY d.producto_id
+        """, (oc_id,))
+        received_map = dict(cursor.fetchall()) # {pid: total_received}
+        
+        # 3. Calculate Balance
+        balance_items = []
+        fully_completed = True
+        
+        for dw_id, pid, qty_ordered in oc_items:
+            qty_received = received_map.get(pid, 0)
+            qty_remaining = max(0, qty_ordered - qty_received)
+            
+            if qty_remaining > 0:
+                fully_completed = False
+            
+            # Get product details for frontend
+            cursor.execute("SELECT nombre, unidad_medida FROM productos WHERE id=?", (pid,))
+            prod = cursor.fetchone()
+            
+            balance_items.append({
+                "pid": pid,
+                "producto": prod[0] if prod else "Unknown",
+                "um": prod[1] if prod else "UN",
+                "cantidad_solicitada": qty_ordered,
+                "cantidad_recibida": qty_received,
+                "cantidad_pendiente": qty_remaining
+            })
+            
+        return {
+            "fully_completed": fully_completed,
+            "items": balance_items
+        }
+        
+    except Exception as e:
+        print(f"Error calculating balance OC {oc_id}: {e}")
+        return None
     finally:
         conn.close()

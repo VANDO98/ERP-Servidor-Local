@@ -18,6 +18,11 @@ export default function Inventory() {
     const [warehouses, setWarehouses] = useState([])
     const [selectedWarehouse, setSelectedWarehouse] = useState('all')
 
+    // Kardex Date Filters & Type
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0].substring(0, 8) + '01')
+    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
+    const [kardexType, setKardexType] = useState('general') // 'general' | 'product'
+
     useEffect(() => {
         fetchWarehouses()
     }, [])
@@ -56,9 +61,18 @@ export default function Inventory() {
         fetchData()
     }, [view])
 
-    const fetchKardex = async (productId) => {
+    const fetchKardex = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/inventory/kardex/${productId}`)
+            let url = ''
+            if (kardexType === 'general') {
+                url = `http://localhost:8000/api/inventory/kardex/general?start_date=${startDate}&end_date=${endDate}`
+            } else if (selectedProduct) {
+                url = `http://localhost:8000/api/inventory/kardex/${selectedProduct}?start_date=${startDate}&end_date=${endDate}`
+            } else {
+                return
+            }
+
+            const response = await fetch(url)
             const data = await response.json()
             setKardexData(data)
         } catch (error) {
@@ -67,10 +81,10 @@ export default function Inventory() {
     }
 
     useEffect(() => {
-        if (selectedProduct && view === 'kardex') {
-            fetchKardex(selectedProduct)
+        if (view === 'kardex') {
+            fetchKardex()
         }
-    }, [selectedProduct])
+    }, [view, kardexType, selectedProduct, startDate, endDate])
 
     const filteredData = inventory.filter(item => {
         const term = searchTerm.toLowerCase()
@@ -234,40 +248,81 @@ export default function Inventory() {
             {view === 'kardex' && (
                 <div className="space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                        <div className="flex gap-4 items-end">
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Seleccione un producto para ver su historial
-                                </label>
-                                <select
-                                    className="w-full p-3 border border-slate-200 rounded-lg"
-                                    value={selectedProduct}
-                                    onChange={(e) => setSelectedProduct(e.target.value)}
-                                >
-                                    <option value="">Seleccionar...</option>
-                                    {products.map(p => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.codigo_sku} | {p.nombre}
-                                        </option>
-                                    ))}
-                                </select>
+                        <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
+                            <div className="flex-1 space-y-4">
+                                <div className="flex gap-4">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="kardexType"
+                                            value="general"
+                                            checked={kardexType === 'general'}
+                                            onChange={() => setKardexType('general')}
+                                            className="text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-slate-700 font-medium">General (Todos)</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="kardexType"
+                                            value="product"
+                                            checked={kardexType === 'product'}
+                                            onChange={() => setKardexType('product')}
+                                            className="text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-slate-700 font-medium">Por Producto</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
+                                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="p-2 border border-slate-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
+                                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="p-2 border border-slate-200 rounded-lg text-sm" />
+                                    </div>
+                                </div>
+
+                                {kardexType === 'product' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Seleccione Producto
+                                        </label>
+                                        <select
+                                            className="w-full md:w-96 p-2 border border-slate-200 rounded-lg"
+                                            value={selectedProduct}
+                                            onChange={(e) => setSelectedProduct(e.target.value)}
+                                        >
+                                            <option value="">Seleccionar...</option>
+                                            {products.map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.codigo_sku} | {p.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
-                            {kardexData.length > 0 && <ExportButton data={kardexData} filename={`kardex_producto_${selectedProduct}`} />}
+                            {kardexData.length > 0 && <ExportButton data={kardexData} filename={`kardex_${kardexType}_${startDate}_${endDate}`} />}
                         </div>
                     </div>
 
-                    {selectedProduct && (
+                    {(kardexType === 'general' || selectedProduct) && (
                         <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-slate-700 font-semibold">
                                         <tr>
                                             <th className="px-6 py-4">Fecha</th>
+                                            {kardexType === 'general' && <th className="px-6 py-4">Producto</th>}
                                             <th className="px-6 py-4">Tipo</th>
                                             <th className="px-6 py-4">Documento</th>
                                             <th className="px-6 py-4 text-right">Entradas</th>
                                             <th className="px-6 py-4 text-right">Salidas</th>
-                                            <th className="px-6 py-4 text-right">Saldo</th>
+                                            {kardexType === 'product' && <th className="px-6 py-4 text-right">Saldo</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -275,15 +330,16 @@ export default function Inventory() {
                                             kardexData.map((k, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50">
                                                     <td className="px-6 py-4">{k.Fecha}</td>
+                                                    {kardexType === 'general' && <td className="px-6 py-4 font-medium text-slate-800">{k.Producto}</td>}
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 text-xs rounded ${k.TipoMovimiento === 'COMPRA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                        <span className={`px-2 py-1 text-xs rounded ${k.TipoMovimiento.includes('COMPRA') || k.TipoMovimiento.includes('ENTRADA') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                                             {k.TipoMovimiento}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 font-mono text-xs">{k.Documento}</td>
-                                                    <td className="px-6 py-4 text-right">{k.Entradas?.toFixed(2)}</td>
-                                                    <td className="px-6 py-4 text-right">{k.Salidas?.toFixed(2)}</td>
-                                                    <td className="px-6 py-4 text-right font-medium">{k.Saldo?.toFixed(2)}</td>
+                                                    <td className="px-6 py-4 text-right">{k.Entradas > 0 ? k.Entradas?.toFixed(2) : '-'}</td>
+                                                    <td className="px-6 py-4 text-right">{k.Salidas > 0 ? k.Salidas?.toFixed(2) : '-'}</td>
+                                                    {kardexType === 'product' && <td className="px-6 py-4 text-right font-medium">{k.Saldo?.toFixed(2)}</td>}
                                                 </tr>
                                             ))
                                         ) : (
