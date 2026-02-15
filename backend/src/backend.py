@@ -1353,7 +1353,7 @@ def obtener_ordenes_compra():
     return df
 
 # Funciones de creación (CRUD)
-def crear_proveedor(razon_social, ruc="", contacto="", telefono="", direccion=""):
+def crear_proveedor(razon_social, ruc="", contacto="", telefono="", direccion="", email=""):
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -1456,7 +1456,7 @@ def obtener_compras_historial():
             c.moneda, 
             c.total_compra as total_final,
             (SELECT COUNT(*) FROM compras_detalle WHERE compra_id = c.id) as items,
-            c.oc_id
+            c.orden_compra_id as oc_id
         FROM compras_cabecera c
         JOIN proveedores p ON c.proveedor_id = p.id
         ORDER BY c.fecha_emision DESC, c.id DESC
@@ -1547,7 +1547,7 @@ def registrar_compra(data):
         cursor.execute("""
             INSERT INTO compras_cabecera (
                 proveedor_id, fecha_emision, tipo_documento, serie, numero, 
-                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, oc_id
+                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, orden_compra_id
             )
             VALUES (?, ?, 'FACTURA', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
         """, (
@@ -2174,7 +2174,7 @@ def actualizar_orden_compra(oc_id, data):
         cursor.execute("""
             INSERT INTO compras_cabecera (
                 proveedor_id, fecha_emision, tipo_documento, serie, numero, 
-                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, oc_id
+                moneda, total_compra, total_gravada, total_igv, tipo_cambio, fecha_registro, orden_compra_id
             )
             VALUES (?, ?, 'FACTURA', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (prov_id, fecha_emision, serie, numero, moneda, total_compra, base, igv, tc_actual, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), oc_id))
@@ -2246,7 +2246,7 @@ def obtener_orden_compra(oc_id):
         
         # Detalles - STRATEGY: Legacy Schema (ordenes_compra_det)
         query_det = """
-            SELECT od.producto_id as pid, pr.nombre as Producto, pr.unidad_medida as um,
+            SELECT od.producto_id as pid, od.producto_id, pr.nombre as Producto, pr.nombre as producto_nombre, pr.unidad_medida as um,
                    od.cantidad_solicitada as cantidad, od.precio_unitario_pactado as precio_unitario
             FROM ordenes_compra_det od
             JOIN productos pr ON od.producto_id = pr.id
@@ -2426,9 +2426,23 @@ def crear_guia_remision(data):
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # 0. Validate/Fetch Provider
+        proveedor_id = data.get('proveedor_id')
+        oc_id = data.get('oc_id')
+
+        # If provider is missing but we have an OC, fetch it from the OC
+        if not proveedor_id and oc_id:
+            cursor.execute("SELECT proveedor_id FROM ordenes_compra WHERE id = ?", (oc_id,))
+            res = cursor.fetchone()
+            if res:
+                proveedor_id = res[0]
+        
+        if not proveedor_id:
+             return False, "Error: Debe especificar un proveedor o una OC válida."
+
         # Check duplicate guide for provider
         cursor.execute("SELECT id FROM guias_remision WHERE proveedor_id=? AND numero_guia=?", 
-                      (data['proveedor_id'], data['numero_guia']))
+                      (proveedor_id, data['numero_guia']))
         if cursor.fetchone():
             return False, f"Ya existe la guía {data['numero_guia']} para este proveedor"
 
@@ -2436,7 +2450,7 @@ def crear_guia_remision(data):
         cursor.execute("""
             INSERT INTO guias_remision (proveedor_id, oc_id, numero_guia, fecha_recepcion)
             VALUES (?, ?, ?, ?)
-        """, (data['proveedor_id'], data.get('oc_id'), data['numero_guia'], data['fecha_recepcion']))
+        """, (proveedor_id, oc_id, data['numero_guia'], data['fecha_recepcion']))
         
         guia_id = cursor.lastrowid
         
@@ -2471,6 +2485,7 @@ def obtener_guias():
         SELECT 
             g.id,
             g.fecha_recepcion,
+            g.fecha_recepcion as fecha,
             g.numero_guia,
             p.razon_social as proveedor,
             g.oc_id,
@@ -2488,6 +2503,45 @@ def obtener_guias():
     finally:
         conn.close()
 
+def obtener_ordenes_pendientes():
+    """Retorna OCs que tienen saldo pendiente de recepción"""
+    conn = get_connection()
+    try:
+        # SQL para calcular pendiente
+        # Se asume que una OC está pendiente si la suma de lo solicitado > suma de lo recibido
+        # Y el estado es APROBADA o PENDIENTE (no ANULADA, no RECHAZADA)
+        # OJO: Si estado es FACTURADA, podría aún tener saldo si fue parcial. 
+        # Pero usuario dijo "OC Aprobadas y que tengan saldo pendiente".
+        
+        query = """
+        SELECT 
+            oc.id, 
+            oc.fecha_emision as fecha, 
+            p.razon_social as proveedor_nombre,
+            p.razon_social as proveedor,
+            p.id as proveedor_id,
+            (SELECT SUM(cantidad_solicitada) FROM ordenes_compra_det WHERE oc_id = oc.id) as total_ordered,
+            COALESCE((
+                SELECT SUM(d.cantidad_recibida) 
+                FROM guias_remision_det d 
+                JOIN guias_remision g ON d.guia_id = g.id 
+                WHERE g.oc_id = oc.id
+            ), 0) as total_received
+        FROM ordenes_compra oc
+        JOIN proveedores p ON oc.proveedor_id = p.id
+        WHERE oc.estado IN ('APROBADA', 'PENDIENTE', 'FACTURADA', 'APROBADO')
+        GROUP BY oc.id
+        HAVING total_received < total_ordered
+        ORDER BY oc.fecha_emision DESC
+        """
+        df = pd.read_sql(query, conn)
+        return df.to_dict(orient='records')
+    except Exception as e:
+        print(f"Error getting pending orders: {e}")
+        return []
+    finally:
+        conn.close()
+
 def obtener_guia_detalle(id):
     conn = get_connection()
     cursor = conn.cursor()
@@ -2495,7 +2549,7 @@ def obtener_guia_detalle(id):
     try:
         # Header
         cursor.execute("""
-            SELECT g.*, p.razon_social, p.ruc_dni
+            SELECT g.*, p.razon_social as proveedor_nombre, p.razon_social, p.ruc_dni
             FROM guias_remision g
             JOIN proveedores p ON g.proveedor_id = p.id
             WHERE g.id = ?
@@ -2509,11 +2563,20 @@ def obtener_guia_detalle(id):
         header_cols = [description[0] for description in cursor.description]
         header_dict = dict(zip(header_cols, header))
         
-        # Items
+        # Items - Join with OC Details to get the agreed price!
+        # Also alias fields for frontend compatibility (pid, amount, price)
         cursor.execute("""
-            SELECT d.*, p.nombre as producto, p.unidad_medida
+            SELECT 
+                d.id, d.guia_id, d.producto_id, d.cantidad_recibida, d.almacen_destino_id,
+                d.producto_id as pid,
+                d.cantidad_recibida as cantidad,
+                p.nombre as producto, p.unidad_medida, p.codigo_sku as codigo,
+                COALESCE(ocd.precio_unitario_pactado, p.costo_promedio) as precio_unitario,
+                COALESCE(ocd.precio_unitario_pactado, p.costo_promedio) * d.cantidad_recibida as subtotal
             FROM guias_remision_det d
             JOIN productos p ON d.producto_id = p.id
+            LEFT JOIN guias_remision g ON d.guia_id = g.id
+            LEFT JOIN ordenes_compra_det ocd ON (g.oc_id = ocd.oc_id AND d.producto_id = ocd.producto_id)
             WHERE d.guia_id = ?
         """, (id,))
         
@@ -2522,7 +2585,8 @@ def obtener_guia_detalle(id):
         
         return {
             **header_dict,
-            "items": items
+            "items": items,
+            "fecha": header_dict.get('fecha_recepcion') # Alias for generic forms
         }
     except Exception as e:
         print(F"Error detail guia: {e}")
@@ -2539,7 +2603,7 @@ def obtener_saldo_oc(oc_id):
     cursor = conn.cursor()
     try:
         # 1. Get OC Items
-        cursor.execute("SELECT id, producto_id, cantidad FROM ordenes_compra_det WHERE oc_id=?", (oc_id,))
+        cursor.execute("SELECT id, producto_id, cantidad_solicitada FROM ordenes_compra_det WHERE oc_id=?", (oc_id,))
         oc_items = cursor.fetchall() # [(id, pid, qty), ...]
         
         # 2. Get Received Items for this OC
@@ -2569,6 +2633,7 @@ def obtener_saldo_oc(oc_id):
             
             balance_items.append({
                 "pid": pid,
+                "producto_id": pid,
                 "producto": prod[0] if prod else "Unknown",
                 "um": prod[1] if prod else "UN",
                 "cantidad_solicitada": qty_ordered,

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '../services/api'
-import { Plus, Search, FileText, Calendar, Truck, Check } from 'lucide-react'
+import { Plus, Search, FileText, Calendar, Truck, Check, RefreshCw } from 'lucide-react'
 import ExportButton from '../components/ExportButton'
 
 export default function DeliveryGuides() {
-    const [view, setView] = useState('list') // 'list' | 'create'
+    const [activeTab, setActiveTab] = useState('list') // 'list' | 'create'
     const [guides, setGuides] = useState([])
     const [orders, setOrders] = useState([]) // Approved OCs
     const [products, setProducts] = useState([]) // All Products for manual entry
@@ -24,11 +24,29 @@ export default function DeliveryGuides() {
 
     const [ocDetails, setOcDetails] = useState(null)
     const [selectedGuide, setSelectedGuide] = useState(null)
+    const [providers, setProviders] = useState([]) // For manual entry
 
     useEffect(() => {
         fetchGuides()
         fetchProducts()
+        fetchProviders()
     }, [])
+
+    const fetchProviders = async () => {
+        try {
+            const res = await api.getProviders()
+            setProviders(res)
+        } catch (error) {
+            console.error("Error fetching providers:", error)
+        }
+    }
+
+    // Refresh orders whenever we switch to Create tab
+    useEffect(() => {
+        if (activeTab === 'create') {
+            fetchApprovedOrders()
+        }
+    }, [activeTab])
 
     const fetchProducts = async () => {
         try {
@@ -40,42 +58,32 @@ export default function DeliveryGuides() {
     }
 
     const fetchGuides = async () => {
+        setLoading(true)
         try {
             const res = await fetch('http://localhost:8000/api/guides')
             const data = await res.json()
-            setGuides(data)
+            console.log("Guides loaded:", data)
+            setGuides(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching guides:", error)
+            alert("Error al cargar las guías")
+        } finally {
+            setLoading(false)
         }
     }
 
     const fetchApprovedOrders = async () => {
         try {
-            const res = await api.getOrders()
-            // Filter only Approved orders (and maybe those not yet fully received, but for now just Approved)
-            setOrders(res.filter(o => o.estado === 'APROBADA' || o.estado === 'PENDIENTE'))
-            // Include PENDIENTE? No, technically Guide should follow Approval.
-            // But user workflow might be loose. Let's stick to APROBADA + FACTURADA (if guide came late).
-            // Actually, if FACTURADA, guide might be missing.
-            // Let's allow APROBADA and FACTURADA.
+            console.log("Fetching pending orders...")
+            const res = await fetch('http://localhost:8000/api/orders/pending')
+            if (!res.ok) throw new Error("Error fetching orders")
+            const data = await res.json()
+            console.log("Pending orders loaded:", data)
+            setOrders(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching orders:", error)
+            alert("Error al cargar órdenes pendientes")
         }
-    }
-
-    const handleCreateClick = () => {
-        fetchApprovedOrders()
-        setView('create')
-        setFormData({
-            proveedor_id: '',
-            oc_id: '',
-            numero_guia: '',
-            fecha_recepcion: new Date().toISOString().split('T')[0],
-            items: [],
-            observaciones: ''
-        })
-        setSelectedOcId('')
-        setOcDetails(null)
     }
 
     const handleOcSelect = async (e) => {
@@ -95,7 +103,7 @@ export default function DeliveryGuides() {
         }
 
         try {
-            // Fetch OC Details AND Balance
+            // Fetch OC Details AND Balance via new endpoint
             const res = await fetch(`http://localhost:8000/api/orders/${oid}/balance`)
             if (!res.ok) throw new Error("Error al obtener saldo de OC")
 
@@ -114,10 +122,10 @@ export default function DeliveryGuides() {
                 proveedor_id: selectedOrder?.proveedor_id || '',
                 oc_id: oid,
                 items: data.items.map(i => ({
-                    pid: i.pid,
+                    pid: i.pid || i.producto_id, // Ensure we get ID
                     producto: i.producto,
                     um: i.um,
-                    cantidad_solicitada: i.cantidad,
+                    cantidad_solicitada: i.cantidad_solicitada || i.cantidad,
                     cantidad_recibida: 0,
                     cantidad_pendiente: i.cantidad_pendiente,
                     cantidad: i.cantidad_pendiente, // Default to remaining
@@ -132,17 +140,38 @@ export default function DeliveryGuides() {
 
     const handleItemChange = (index, field, value) => {
         const newItems = [...formData.items]
-
         if (field === 'cantidad') {
             const val = parseFloat(value) || 0
-            // Optional: Validate against max_quantity
-            // if (val > newItems[index].max_quantity) {
-            //    alert(`No puedes recibir más de lo pendiente (${newItems[index].max_quantity})`)
-            //    return
-            // }
             newItems[index][field] = val
         } else {
             newItems[index][field] = value
+        }
+        setFormData({ ...formData, items: newItems })
+    }
+
+    // Manual Items Management
+    const addManualItem = () => {
+        setFormData(prev => ({
+            ...prev,
+            items: [...prev.items, { pid: '', cantidad: 1, almacen_id: 1, um: 'UN' }]
+        }))
+    }
+
+    const removeManualItem = (index) => {
+        const newItems = formData.items.filter((_, i) => i !== index)
+        setFormData(prev => ({ ...prev, items: newItems }))
+    }
+
+    const updateManualItem = (index, field, value) => {
+        const newItems = [...formData.items]
+        newItems[index][field] = value
+
+        if (field === 'pid') {
+            const prod = products.find(p => p.id == value)
+            if (prod) {
+                newItems[index].um = prod.unidad_medida || 'UN'
+                newItems[index].producto = prod.nombre
+            }
         }
         setFormData({ ...formData, items: newItems })
     }
@@ -154,11 +183,11 @@ export default function DeliveryGuides() {
             const payload = {
                 ...formData,
                 items: formData.items
-                    .filter(i => i.cantidad > 0) // Only send items with quantity > 0
+                    .filter(i => i.cantidad > 0)
                     .map(i => ({
                         pid: parseInt(i.pid),
                         cantidad: parseFloat(i.cantidad),
-                        almacen_id: parseInt(i.almacen_id)
+                        almacen_id: parseInt(i.almacen_id || 1)
                     }))
             }
 
@@ -178,7 +207,18 @@ export default function DeliveryGuides() {
 
             alert("Guía registrada correctamente")
             fetchGuides()
-            setView('list')
+            setActiveTab('list') // Switch back to list
+            setFormData({
+                proveedor_id: '',
+                oc_id: '',
+                numero_guia: '',
+                fecha_recepcion: new Date().toISOString().split('T')[0],
+                items: [],
+                observaciones: ''
+            })
+            setSelectedOcId('')
+            setOcDetails(null)
+
         } catch (error) {
             alert(error.message)
         } finally {
@@ -199,8 +239,8 @@ export default function DeliveryGuides() {
     }
 
     const filteredGuides = guides.filter(g =>
-        g.numero_guia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        g.proveedor.toLowerCase().includes(searchTerm.toLowerCase())
+        (g.numero_guia || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (g.proveedor || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
 
     return (
@@ -210,14 +250,36 @@ export default function DeliveryGuides() {
                     <h1 className="text-3xl font-bold text-slate-800">Guías de Remisión</h1>
                     <p className="text-slate-500">Gestión de recepción de mercadería</p>
                 </div>
-                {view === 'list' && (
-                    <button onClick={handleCreateClick} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
-                        <Plus size={20} /> Nueva Guía
-                    </button>
-                )}
+                {/* Refresh Button */}
+                <button onClick={fetchGuides} className="text-slate-400 hover:text-blue-600 p-2" title="Recargar">
+                    <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+                </button>
             </div>
 
-            {view === 'list' ? (
+            {/* TABS */}
+            <div className="flex border-b border-slate-200">
+                <button
+                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'list'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                        }`}
+                    onClick={() => setActiveTab('list')}
+                >
+                    Listado de Guías
+                </button>
+                <button
+                    className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'create'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                        }`}
+                    onClick={() => setActiveTab('create')}
+                >
+                    Registrar Recepción
+                </button>
+            </div>
+
+            {/* TAB CONTENT: LIST */}
+            {activeTab === 'list' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 flex justify-between items-center gap-4">
                         <div className="relative flex-1 max-w-md">
@@ -248,11 +310,15 @@ export default function DeliveryGuides() {
                             <tbody className="divide-y divide-slate-100">
                                 {filteredGuides.map((g, idx) => (
                                     <tr key={idx} className="hover:bg-slate-50">
-                                        <td className="px-6 py-4">{g.fecha_recepcion}</td>
+                                        <td className="px-6 py-4">{g.fecha || g.fecha_recepcion}</td>
                                         <td className="px-6 py-4 font-mono font-medium">{g.numero_guia}</td>
-                                        <td className="px-6 py-4">{g.proveedor}</td>
+                                        <td className="px-6 py-4">{g.proveedor_nombre || g.proveedor}</td>
                                         <td className="px-6 py-4 text-blue-600">
-                                            {g.oc_id ? `OC-${String(g.oc_id).padStart(6, '0')}` : '-'}
+                                            {g.oc_id ? (
+                                                <a href={`/purchase?ocId=${g.oc_id}&guideId=${g.id}`} className="hover:underline flex items-center gap-1">
+                                                    OC-{String(g.oc_id).padStart(6, '0')} <Truck size={14} />
+                                                </a>
+                                            ) : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-center">{g.items_count}</td>
                                         <td className="px-6 py-4 text-right">
@@ -273,9 +339,12 @@ export default function DeliveryGuides() {
                         </table>
                     </div>
                 </div>
-            ) : (
+            )}
+
+            {/* TAB CONTENT: CREATE */}
+            {activeTab === 'create' && (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-                    <h2 className="text-xl font-bold text-slate-700 mb-6 pb-2 border-b border-slate-100">Registrar Recepción</h2>
+                    <h2 className="text-xl font-bold text-slate-700 mb-6 pb-2 border-b border-slate-100">Nueva Guía de Remisión</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -296,6 +365,24 @@ export default function DeliveryGuides() {
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Provider Select for Manual Entry */}
+                            {selectedOcId === 'manual' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor *</label>
+                                    <select
+                                        required
+                                        className="w-full p-2 border border-slate-200 rounded-lg"
+                                        value={formData.proveedor_id}
+                                        onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}
+                                    >
+                                        <option value="">-- Seleccionar Proveedor --</option>
+                                        {providers.map(p => (
+                                            <option key={p.id} value={p.id}>{p.razon_social}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Número de Guía *</label>
@@ -411,7 +498,7 @@ export default function DeliveryGuides() {
                         <div className="flex justify-end gap-3 pt-4">
                             <button
                                 type="button"
-                                onClick={() => setView('list')}
+                                onClick={() => setActiveTab('list')}
                                 className="px-6 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium"
                             >
                                 Cancelar
@@ -428,7 +515,7 @@ export default function DeliveryGuides() {
                 </div>
             )}
 
-            {/* Guide Detail Modal */}
+            {/* Guide Detail Modal (unchanged logic) */}
             {selectedGuide && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
@@ -446,11 +533,17 @@ export default function DeliveryGuides() {
                                 </div>
                                 <div>
                                     <p className="text-slate-500">Fecha Recepción</p>
-                                    <p className="font-medium text-slate-800">{selectedGuide.fecha_recepcion}</p>
+                                    <p className="font-medium text-slate-800">{selectedGuide.fecha || selectedGuide.fecha_recepcion}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500">Orden de Compra</p>
-                                    <p className="font-medium text-blue-600">{selectedGuide.oc_id ? `OC-${String(selectedGuide.oc_id).padStart(6, '0')}` : '-'}</p>
+                                    <p className="font-medium text-blue-600">
+                                        {(selectedGuide.oc_id || selectedGuide.orden_compra_id) ? (
+                                            <a href={`/purchase?ocId=${selectedGuide.oc_id || selectedGuide.orden_compra_id}&guideId=${selectedGuide.id}`} className="hover:underline flex items-center gap-1">
+                                                OC-{String(selectedGuide.oc_id || selectedGuide.orden_compra_id).padStart(6, '0')} <Truck size={14} />
+                                            </a>
+                                        ) : '-'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -468,7 +561,7 @@ export default function DeliveryGuides() {
                                             <tr key={idx}>
                                                 <td className="px-4 py-2">{item.producto}</td>
                                                 <td className="px-4 py-2 text-center text-slate-500">{item.unidad_medida || item.um}</td>
-                                                <td className="px-4 py-2 text-right font-medium">{item.cantidad_recibida}</td>
+                                                <td className="px-4 py-2 text-right font-medium">{Number(item.cantidad_recibida || item.cantidad || 0).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>

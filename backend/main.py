@@ -436,6 +436,26 @@ def update_order_status(oid: int, status: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/orders/{oid}/balance")
+def get_order_balance(oid: int):
+    """Get pending balance for an OC (Requested - Received)"""
+    try:
+        data = db.obtener_saldo_oc(oid)
+        if not data:
+            raise HTTPException(status_code=404, detail="Order not found or error calculating balance")
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/orders/pending")
+def get_pending_orders():
+    """Get orders that have items pending delivery"""
+    try:
+        data = db.obtener_ordenes_pendientes()
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/orders/{oid}/convert")
 def convert_order_invoice(oid: int, serie: str, numero: str, fecha: str):
     try:

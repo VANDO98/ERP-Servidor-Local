@@ -49,57 +49,75 @@ export default function Purchase() {
         }).catch(console.error)
     }, [])
 
-    // Check for linked OC
     useEffect(() => {
-        if (location.state && location.state.ocId) {
-            loadOcData(location.state.ocId)
-        }
-    }, [location.state])
+        const params = new URLSearchParams(location.search)
+        const ocId = params.get('ocId')
+        const guideId = params.get('guideId')
 
-    const loadOcData = async (ocId) => {
-        try {
-            const res = await fetch(`http://localhost:8000/api/orders/${ocId}`)
-            if (!res.ok) throw new Error("Error cargando OC")
-            const data = await res.json()
-
-            setFormData(prev => ({
-                ...prev,
-                proveedor_id: data.proveedor_id,
-                fecha: new Date().toISOString().split('T')[0], // Use current date for invoice, or OC date? Usually invoice date.
-                moneda: data.moneda,
-                tasa_igv: data.tasa_igv,
-                orden_compra_id: ocId,
-                items: data.items.map(i => ({
-                    pid: i.pid,
-                    cantidad: i.cantidad,
-                    precio_unitario: i.precio_unitario,
-                    um: i.um
-                }))
-            }))
-            setSuccessMsg(`Cargados datos de OC-${String(ocId).padStart(6, '0')}`)
-        } catch (error) {
-            setErrorMsg(error.message)
-        }
-    }
-
-    const fetchHistory = async () => {
-        try {
-            const [summary, detailed] = await Promise.all([
-                fetch('http://localhost:8000/api/purchases/summary').then(r => r.json()),
-                fetch('http://localhost:8000/api/purchases/detailed').then(r => r.json())
-            ])
-            setPurchaseHistory(summary)
-            setDetailedHistory(detailed)
-        } catch (error) {
-            console.error('Error fetching history:', error)
-        }
-    }
-
-    useEffect(() => {
-        if (view !== 'register') {
+        if (guideId && ocId) {
+            loadInvoiceFromGuide(guideId, ocId)
+        } else if (ocId) {
+            loadOcData(ocId)
+        } else if (view !== 'register') {
             fetchHistory()
         }
-    }, [view])
+    }, [location.search, view])
+
+    // New: Load Data safely merging OC Header + Guide Items
+    const loadInvoiceFromGuide = async (gid, oid) => {
+        setLoading(true)
+        try {
+            // 1. Fetch both in parallel
+            const [resOc, resGuide] = await Promise.all([
+                fetch(`http://localhost:8000/api/orders/${oid}`),
+                fetch(`http://localhost:8000/api/guides/${gid}`)
+            ])
+
+            if (!resOc.ok) throw new Error("Error cargando OC")
+            if (!resGuide.ok) throw new Error("Error cargando Guía")
+
+            const ocData = await resOc.json()
+            const guideData = await resGuide.json()
+
+            // 2. Prepare items from GUIDE (received quantities)
+            // Note: Guide items might not have price, so we try to match with OC items to get price
+            const mergedItems = guideData.items.map(gItem => {
+                // Find matching item in OC to get requested price
+                // Match by Product ID
+                const ocItem = ocData.items.find(oItem => oItem.pid === gItem.producto_id)
+                const price = ocItem ? ocItem.precio_unitario : 0
+
+                return {
+                    pid: gItem.producto_id,
+                    cantidad: gItem.cantidad_recibida, // Use RECEIVED quantity
+                    precio_unitario: price,
+                    um: gItem.unidad_medida || 'UN',
+                    almacen_id: gItem.almacen_destino_id || 1
+                }
+            })
+
+            // 3. Set Form Data: OC Header + Guide Items
+            setFormData(prev => ({
+                ...prev,
+                proveedor_id: ocData.proveedor_id,
+                fecha: new Date().toISOString().split('T')[0],
+                moneda: ocData.moneda,
+                tasa_igv: ocData.tasa_igv,
+                orden_compra_id: oid,
+                guia_remision_id: gid,
+                observaciones: `Facturación de Guía ${guideData.numero_guia} (OC-${String(oid).padStart(6, '0')})`,
+                items: mergedItems
+            }))
+
+            setSuccessMsg(`Datos cargados: Guía ${guideData.numero_guia} + OC-${String(oid).padStart(6, '0')}`)
+
+        } catch (error) {
+            console.error(error)
+            setErrorMsg("Error al cargar datos de Guía/OC: " + error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const addRow = () => {
         setFormData({
