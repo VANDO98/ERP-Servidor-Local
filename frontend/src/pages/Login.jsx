@@ -36,8 +36,8 @@ const Login = () => {
                         <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                             <Lock className="w-8 h-8 text-white" />
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Bienvenido</h2>
-                        <p className="text-blue-100 text-sm">ERP Moderno Web</p>
+                        <h2 class="text-3xl font-bold text-white mb-2">Bienvenido</h2>
+                        <p className="text-blue-100 text-sm">Sistema de Gestión Empresarial</p>
                     </div>
                 </div>
 

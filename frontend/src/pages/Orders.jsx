@@ -279,7 +279,7 @@ export default function Orders() {
                 doc.setFontSize(8)
                 doc.setTextColor(150)
                 doc.text(`Página ${i} de ${pageCount}`, 196, 285, { align: 'right' })
-                doc.text("Generado por ERP Moderno", 14, 285)
+                // doc.text("Generado por ERP Moderno", 14, 285)
             }
 
             window.open(doc.output('bloburl'), '_blank')

@@ -301,6 +301,7 @@ def obtener_orden_compra(oid):
         cursor = conn.cursor()
         cursor.execute("""
             SELECT oc.*, 
+                   oc.fecha_emision as fecha,
                    p.razon_social as proveedor_nombre, 
                    p.ruc_dni as proveedor_ruc, 
                    p.direccion as proveedor_direccion,
