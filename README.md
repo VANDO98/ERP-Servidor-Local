@@ -27,9 +27,9 @@ Antes de comenzar, asegúrate de tener instalado:
 
 ---
 
-## ⚙️ Instalación desde Cero
+## ⚙️ Instalación Automática (Recomendado)
 
-Sigue estos pasos para desplegar el proyecto en un nuevo entorno:
+El proyecto incluye scripts automatizados para Windows que facilitan la configuración.
 
 ### 1. Clonar el Repositorio
 ```bash
@@ -37,21 +37,16 @@ git clone <URL_DEL_REPOSITORIO>
 cd "ERP servidor local"
 ```
 
-### 2. Configuración del Backend
-```bash
-cd backend
-python -m venv venv
-# Activar entorno virtual
-# En Windows:
-..\venv\Scripts\activate
-# En Linux/Mac: source ../venv/bin/activate
+### 2. Configuración Inicial (`setup_env.bat`)
+Ejecuta el archivo `setup_env.bat` (doble clic o desde terminal).
+Este script se encargará de:
+1.  Crear el entorno virtual (`venv`) para el backend.
+2.  Instalar todas las dependencias de Python (`requirements.txt`).
+3.  Inicializar la Base de Datos SQLite.
+4.  (Opcional) Cargar datos de prueba iniciales (Semilla).
 
-# Instalar dependencias
-pip install -r requirements.txt
-cd ..
-```
-
-### 3. Configuración del Frontend
+### 3. Instalación Frontend
+Si es la primera vez, instala las dependencias de node:
 ```bash
 cd frontend
 npm install
@@ -135,12 +130,16 @@ ERP servidor local/
     *   Puebla la base de datos con datos de prueba y usuario admin.
 
 ### Solución de Problemas
-*   **Limpieza de Entorno:** Ejecuta `clean_environment.bat` si encuentras conflictos con librerías o carpetas `venv` duplicadas.
-*   **Dependencias:** El sistema verifica automáticamente las librerías al inicio (`check_dependencies.py`), pero puedes instalarlas manualmente con `pip install -r backend/requirements.txt`.
+*   **Limpieza de Entorno:** Ejecuta `clean_env.bat`. Este script elimina el entorno virtual (`venv`) y los archivos caché (`__pycache__`), permitiendo una instalación limpia desde cero con `setup_env.bat`.
+*   **Dependencias:** El sistema verifica automáticamente las librerías al inicio (`check_dependencies.py`).
+
+## 🔐 Seguridad y Sesión
+*   **Token de Sesión:** Duración extendida de **12 horas** para evitar desconexiones durante la jornada laboral.
+*   **Control de Inactividad:** El sistema detecta inactividad tras **10 minutos**. Mostrará una alerta 60 segundos antes de cerrar sesión automáticamente para validar tu presencia.
 
 ## 🔄 Control de Versiones (Git)
 El proyecto incluye un `.gitignore` optimizado para evitar subir archivos temporales (`__pycache__`, `venv`, `.db`).
 
 ---
-**Versión Actual:** 2.1 (Incluye corrección de estado de OCs y mejoras en validación de dependencias).
+**Versión Actual:** 2.2 (Refactorización Modular, Scripts de Gestión y Control de Sesión).
 Desarrollado para gestión eficiente en entornos locales.

@@ -206,7 +206,7 @@ def obtener_ordenes_compra():
                 oc.moneda, 
                 oc.estado, 
                 (SELECT COUNT(*) FROM ordenes_compra_det WHERE oc_id = oc.id) as Items,
-                COALESCE((SELECT SUM(cantidad_solicitada * precio_unitario_pactado) FROM ordenes_compra_det WHERE oc_id = oc.id), 0) as total
+                COALESCE((SELECT SUM(ROUND(cantidad_solicitada * precio_unitario_pactado, 2)) FROM ordenes_compra_det WHERE oc_id = oc.id), 0) as total
             FROM ordenes_compra oc
             JOIN proveedores p ON oc.proveedor_id = p.id
             ORDER BY oc.id DESC
@@ -224,7 +224,7 @@ def obtener_orden_compra(oid):
                    p.razon_social as proveedor_nombre, 
                    p.ruc_dni as proveedor_ruc, 
                    p.direccion as proveedor_direccion,
-                   (SELECT COALESCE(SUM(cantidad_solicitada * precio_unitario_pactado), 0) FROM ordenes_compra_det WHERE oc_id = oc.id) as total
+                   (SELECT COALESCE(SUM(ROUND(cantidad_solicitada * precio_unitario_pactado, 2)), 0) FROM ordenes_compra_det WHERE oc_id = oc.id) as total
             FROM ordenes_compra oc
             JOIN proveedores p ON oc.proveedor_id = p.id
             WHERE oc.id = ?

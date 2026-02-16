@@ -8,7 +8,7 @@ from src.database.db import get_connection
 def obtener_productos():
     conn = get_connection()
     try:
-        df = pd.read_sql("SELECT id, nombre, codigo_sku, categoria_id, unidad_medida, stock_actual, stock_minimo, costo_promedio, precio_venta FROM productos", conn)
+        df = pd.read_sql("SELECT id, nombre, codigo_sku, categoria_id, unidad_medida, stock_actual, stock_minimo, ROUND(costo_promedio, 2) as costo_promedio, ROUND(precio_venta, 2) as precio_venta FROM productos", conn)
         return df
     finally:
         conn.close()

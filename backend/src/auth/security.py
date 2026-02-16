@@ -12,7 +12,7 @@ from pydantic import BaseModel
 # Configuration (Should ideally be in .env)
 SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion-12345"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30 # Can be imported by main.py
+ACCESS_TOKEN_EXPIRE_MINUTES = 720 # 12 Hours (User requested extended session, frontend handles idle check)
 FERNET_KEY = b'Z7qJqU4y7r7w-2n3b4c5d6e7f8g9h0i1j2k3l4m5n6o=' 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")

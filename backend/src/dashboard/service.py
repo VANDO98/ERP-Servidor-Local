@@ -14,19 +14,19 @@ def obtener_kpis_dashboard(start_date, end_date):
     
     try:
         # 1. Total Compras
-        query_compras = f"""
+        query_compras = """
             SELECT TOTAL(
-                CASE 
-                    WHEN moneda = 'USD' THEN total_compra * COALESCE(tipo_cambio, {tc})
+                ROUND(CASE 
+                    WHEN moneda = 'USD' THEN total_compra * COALESCE(tipo_cambio, ?)
                     ELSE total_compra
-                END
+                END, 2)
             ) as monto, 
             COUNT(*) as docs
             FROM compras_cabecera
             WHERE fecha_emision BETWEEN ? AND ?
         """
         cursor = conn.cursor()
-        cursor.execute(query_compras, (start_date, end_date))
+        cursor.execute(query_compras, (tc, start_date, end_date))
         res_compras = cursor.fetchone()
         monto_compras = res_compras[0] if res_compras[0] else 0.0
         docs_compras = res_compras[1] if res_compras[1] else 0
@@ -44,7 +44,7 @@ def obtener_kpis_dashboard(start_date, end_date):
         # Let's use PRECIO VENTA for "Ventas/Salidas" value.
         
         query_salidas = """
-            SELECT TOTAL(sd.cantidad * p.precio_venta) as monto
+            SELECT TOTAL(ROUND(sd.cantidad * p.precio_venta, 2)) as monto
             FROM salidas_detalle sd
             JOIN salidas_cabecera sc ON sd.salida_id = sc.id
             JOIN productos p ON sd.producto_id = p.id
@@ -57,7 +57,7 @@ def obtener_kpis_dashboard(start_date, end_date):
         # FIFO calc is too heavy for dashboard load (O(N*M)).
         # We use standard Average Cost valuation for the dashboard KPI.
         try:
-            cursor.execute("SELECT TOTAL(stock_actual * costo_promedio) FROM productos WHERE stock_actual > 0")
+            cursor.execute("SELECT TOTAL(ROUND(stock_actual * costo_promedio, 2)) FROM productos WHERE stock_actual > 0")
             valor_inv = cursor.fetchone()[0] or 0.0
         except Exception as e:
             print(f"Error calculating Inventory Value: {e}")
@@ -89,23 +89,23 @@ def obtener_kpis_dashboard(start_date, end_date):
 def obtener_top_proveedores(start_date, end_date, top_n=10):
     conn = get_connection()
     tc = obtener_tc_sunat()
-    query = f"""
+    query = """
         SELECT p.razon_social as Proveedor, 
                TOTAL(
-                   CASE 
-                       WHEN c.moneda = 'USD' THEN c.total_compra * COALESCE(c.tipo_cambio, {tc})
+                   ROUND(CASE 
+                       WHEN c.moneda = 'USD' THEN c.total_compra * COALESCE(c.tipo_cambio, ?)
                        ELSE c.total_compra
-                   END
+                   END, 2)
                ) as Monto
         FROM compras_cabecera c
         JOIN proveedores p ON c.proveedor_id = p.id
         WHERE c.fecha_emision BETWEEN ? AND ?
         GROUP BY p.id, p.razon_social
         ORDER BY Monto DESC
-        LIMIT {int(top_n)}
+        LIMIT ?
     """
     try:
-        df = pd.read_sql(query, conn, params=(start_date, end_date))
+        df = pd.read_sql(query, conn, params=(tc, start_date, end_date, top_n))
         return df
     finally:
         conn.close()
@@ -113,13 +113,13 @@ def obtener_top_proveedores(start_date, end_date, top_n=10):
 def obtener_gastos_por_categoria(start_date, end_date):
     conn = get_connection()
     tc = obtener_tc_sunat()
-    query = f"""
+    query = """
         SELECT cat.nombre as Categoria, 
                TOTAL(
-                   CASE 
-                       WHEN cc.moneda = 'USD' THEN cd.subtotal * COALESCE(cc.tipo_cambio, {tc})
+                   ROUND(CASE 
+                       WHEN cc.moneda = 'USD' THEN cd.subtotal * COALESCE(cc.tipo_cambio, ?)
                        ELSE cd.subtotal
-                   END
+                   END, 2)
                ) as Monto
         FROM compras_detalle cd
         JOIN compras_cabecera cc ON cd.compra_id = cc.id
@@ -130,7 +130,7 @@ def obtener_gastos_por_categoria(start_date, end_date):
         ORDER BY Monto DESC
     """
     try:
-        df = pd.read_sql(query, conn, params=(start_date, end_date))
+        df = pd.read_sql(query, conn, params=(tc, start_date, end_date))
         return df
     finally:
         conn.close()
@@ -138,13 +138,13 @@ def obtener_gastos_por_categoria(start_date, end_date):
 def obtener_evolucion_compras(start_date, end_date):
     conn = get_connection()
     tc = obtener_tc_sunat()
-    query = f"""
+    query = """
         SELECT fecha_emision as Fecha, 
                TOTAL(
-                   CASE 
-                       WHEN moneda = 'USD' THEN total_compra * COALESCE(tipo_cambio, {tc})
+                   ROUND(CASE 
+                       WHEN moneda = 'USD' THEN total_compra * COALESCE(tipo_cambio, ?)
                        ELSE total_compra
-                   END
+                   END, 2)
                ) as Monto, 
                COUNT(*) as Cantidad
         FROM compras_cabecera
@@ -153,7 +153,7 @@ def obtener_evolucion_compras(start_date, end_date):
         ORDER BY fecha_emision
     """
     try:
-        df = pd.read_sql(query, conn, params=(start_date, end_date))
+        df = pd.read_sql(query, conn, params=(tc, start_date, end_date))
         if not df.empty:
             df['Fecha'] = pd.to_datetime(df['Fecha'])
         return df
@@ -195,7 +195,7 @@ def obtener_alertas_criticas():
         # 3. Compras Grandes
         cursor.execute("""
             SELECT c.serie || '-' || c.numero, p.razon_social, c.fecha_emision,
-                   CASE WHEN c.moneda = 'USD' THEN c.total_compra * COALESCE(c.tipo_cambio, 3.75) ELSE c.total_compra END as monto_pen
+                   ROUND(CASE WHEN c.moneda = 'USD' THEN c.total_compra * COALESCE(c.tipo_cambio, 3.75) ELSE c.total_compra END, 2) as monto_pen
             FROM compras_cabecera c
             JOIN proveedores p ON c.proveedor_id = p.id
             WHERE c.fecha_emision >= date('now', '-7 days') AND monto_pen > 10000
