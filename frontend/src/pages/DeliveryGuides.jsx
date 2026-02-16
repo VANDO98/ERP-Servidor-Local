@@ -231,8 +231,8 @@ export default function DeliveryGuides() {
         <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Guías de Remisión</h1>
-                    <p className="text-slate-500">Gestión de recepción de mercadería</p>
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Guías de Remisión</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Gestión de recepción de mercadería</p>
                 </div>
                 {/* Refresh Button */}
                 <button onClick={fetchGuides} className="text-slate-400 hover:text-blue-600 p-2" title="Recargar">
@@ -241,11 +241,11 @@ export default function DeliveryGuides() {
             </div>
 
             {/* TABS */}
-            <div className="flex border-b border-slate-200">
+            <div className="flex border-b border-slate-200 dark:border-slate-700">
                 <button
                     className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'list'
                         ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                         }`}
                     onClick={() => setActiveTab('list')}
                 >
@@ -254,7 +254,7 @@ export default function DeliveryGuides() {
                 <button
                     className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'create'
                         ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-700'
+                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                         }`}
                     onClick={() => setActiveTab('create')}
                 >
@@ -264,14 +264,14 @@ export default function DeliveryGuides() {
 
             {/* TAB CONTENT: LIST */}
             {activeTab === 'list' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 flex justify-between items-center gap-4">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center gap-4">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-2.5 text-slate-400" size={20} />
                             <input
                                 type="text"
                                 placeholder="Buscar guía o proveedor..."
-                                className="pl-10 pr-4 py-2 w-full border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                className="pl-10 pr-4 py-2 w-full border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 focus:border-blue-400 outline-none transition-all placeholder-slate-400"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -281,7 +281,7 @@ export default function DeliveryGuides() {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-100 dark:border-slate-700">
                                 <tr>
                                     <th className="px-6 py-4">Fecha Recepción</th>
                                     <th className="px-6 py-4">N° Guía</th>
@@ -291,24 +291,24 @@ export default function DeliveryGuides() {
                                     <th className="px-6 py-4 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                 {filteredGuides.map((g, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50">
-                                        <td className="px-6 py-4">{g.fecha || g.fecha_recepcion}</td>
-                                        <td className="px-6 py-4 font-mono font-medium">{g.numero_guia}</td>
-                                        <td className="px-6 py-4">{g.proveedor_nombre || g.proveedor}</td>
-                                        <td className="px-6 py-4 text-blue-600">
+                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{g.fecha || g.fecha_recepcion}</td>
+                                        <td className="px-6 py-4 font-mono font-medium text-slate-800 dark:text-slate-200">{g.numero_guia}</td>
+                                        <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{g.proveedor_nombre || g.proveedor}</td>
+                                        <td className="px-6 py-4 text-blue-600 dark:text-blue-400">
                                             {g.oc_id ? (
                                                 <a href={`/purchase?ocId=${g.oc_id}&guideId=${g.id}`} className="hover:underline flex items-center gap-1">
                                                     OC-{String(g.oc_id).padStart(6, '0')} <Truck size={14} />
                                                 </a>
                                             ) : '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-center">{g.items_count}</td>
+                                        <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-400">{g.items_count}</td>
                                         <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleViewDetail(g.id)}
-                                                className="text-slate-400 hover:text-blue-600"
+                                                className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
                                                 title="Ver Detalle"
                                             >
                                                 <FileText size={18} />
@@ -317,7 +317,7 @@ export default function DeliveryGuides() {
                                     </tr>
                                 ))}
                                 {filteredGuides.length === 0 && (
-                                    <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400">No hay guías registradas</td></tr>
+                                    <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">No hay guías registradas</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -327,21 +327,21 @@ export default function DeliveryGuides() {
 
             {/* TAB CONTENT: CREATE */}
             {activeTab === 'create' && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
-                    <h2 className="text-xl font-bold text-slate-700 mb-6 pb-2 border-b border-slate-100">Nueva Guía de Remisión</h2>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 max-w-4xl mx-auto transition-colors">
+                    <h2 className="text-xl font-bold text-slate-700 dark:text-white mb-6 pb-2 border-b border-slate-100 dark:border-slate-700">Nueva Guía de Remisión</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Seleccionar Orden de Compra *</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Seleccionar Orden de Compra *</label>
                                 <select
                                     required
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={selectedOcId}
                                     onChange={handleOcSelect}
                                 >
                                     <option value="">-- Seleccionar OC --</option>
-                                    <option value="manual" className="font-bold text-blue-600">-- RECEPCIÓN DIRECTA (SIN OC) --</option>
+                                    <option value="manual" className="font-bold text-blue-600 dark:text-blue-400">-- RECEPCIÓN DIRECTA (SIN OC) --</option>
                                     {orders.map(o => (
                                         <option key={o.id} value={o.id}>
                                             OC-{String(o.id).padStart(6, '0')} | {o.proveedor_nombre} | {o.fecha}
@@ -353,10 +353,10 @@ export default function DeliveryGuides() {
                             {/* Provider Select for Manual Entry */}
                             {selectedOcId === 'manual' && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor *</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Proveedor *</label>
                                     <select
                                         required
-                                        className="w-full p-2 border border-slate-200 rounded-lg"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         value={formData.proveedor_id}
                                         onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}
                                     >
@@ -369,23 +369,23 @@ export default function DeliveryGuides() {
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Número de Guía *</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número de Guía *</label>
                                 <input
                                     required
                                     type="text"
                                     placeholder="001-000123"
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
                                     value={formData.numero_guia}
                                     onChange={e => setFormData({ ...formData, numero_guia: e.target.value })}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Recepción *</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha de Recepción *</label>
                                 <input
                                     required
                                     type="date"
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.fecha_recepcion}
                                     onChange={e => setFormData({ ...formData, fecha_recepcion: e.target.value })}
                                 />
@@ -395,16 +395,16 @@ export default function DeliveryGuides() {
                         {(ocDetails || selectedOcId === 'manual') && (
                             <div className="mt-8">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-semibold text-slate-700">Items a Recibir</h3>
+                                    <h3 className="font-semibold text-slate-700 dark:text-white">Items a Recibir</h3>
                                     {selectedOcId === 'manual' && (
-                                        <button type="button" onClick={addManualItem} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                        <button type="button" onClick={addManualItem} className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
                                             <Plus size={16} /> Agregar Producto
                                         </button>
                                     )}
                                 </div>
-                                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                                <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-slate-50 text-slate-600">
+                                        <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
                                             <tr>
                                                 <th className="px-4 py-2">Producto</th>
                                                 <th className="px-4 py-2 text-center">U.M.</th>
@@ -419,13 +419,13 @@ export default function DeliveryGuides() {
                                                 {selectedOcId === 'manual' && <th className="px-4 py-2 w-10"></th>}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                             {formData.items.map((item, idx) => (
-                                                <tr key={idx} className={item.cantidad_pendiente === 0 && selectedOcId !== 'manual' ? "bg-slate-50 opacity-50" : ""}>
-                                                    <td className="px-4 py-2">
+                                                <tr key={idx} className={item.cantidad_pendiente === 0 && selectedOcId !== 'manual' ? "bg-slate-50 dark:bg-slate-800 opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-700/50"}>
+                                                    <td className="px-4 py-2 text-slate-800 dark:text-slate-200">
                                                         {selectedOcId === 'manual' ? (
                                                             <select
-                                                                className="w-full p-1 border border-slate-200 rounded"
+                                                                className="w-full p-1 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none"
                                                                 value={item.pid}
                                                                 onChange={e => updateManualItem(idx, 'pid', e.target.value)}
                                                                 required
@@ -439,12 +439,12 @@ export default function DeliveryGuides() {
                                                             item.producto
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-2 text-center text-slate-500">{item.um}</td>
+                                                    <td className="px-4 py-2 text-center text-slate-500 dark:text-slate-400">{item.um}</td>
                                                     {selectedOcId !== 'manual' && (
                                                         <>
-                                                            <td className="px-4 py-2 text-right text-slate-500">{item.cantidad_solicitada}</td>
-                                                            <td className="px-4 py-2 text-right text-slate-500">{item.cantidad_recibida}</td>
-                                                            <td className="px-4 py-2 text-right text-orange-600 font-medium">{item.cantidad_pendiente}</td>
+                                                            <td className="px-4 py-2 text-right text-slate-500 dark:text-slate-400">{item.cantidad_solicitada}</td>
+                                                            <td className="px-4 py-2 text-right text-slate-500 dark:text-slate-400">{item.cantidad_recibida}</td>
+                                                            <td className="px-4 py-2 text-right text-orange-600 dark:text-orange-400 font-medium">{item.cantidad_pendiente}</td>
                                                         </>
                                                     )}
                                                     <td className="px-4 py-2">
@@ -452,7 +452,7 @@ export default function DeliveryGuides() {
                                                             type="number"
                                                             min="0"
                                                             step="0.01"
-                                                            className="w-full p-1 border border-slate-300 rounded text-right focus:border-blue-500 outline-none"
+                                                            className="w-full p-1 border border-slate-300 dark:border-slate-600 rounded text-right focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
                                                             value={item.cantidad}
                                                             onChange={e => selectedOcId === 'manual' ? updateManualItem(idx, 'cantidad', e.target.value) : handleItemChange(idx, 'cantidad', e.target.value)}
                                                             disabled={selectedOcId !== 'manual' && item.cantidad_pendiente === 0}
@@ -483,7 +483,7 @@ export default function DeliveryGuides() {
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('list')}
-                                className="px-6 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium"
+                                className="px-6 py-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium"
                             >
                                 Cancelar
                             </button>
@@ -502,22 +502,22 @@ export default function DeliveryGuides() {
             {/* Guide Detail Modal (unchanged logic) */}
             {selectedGuide && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-lg text-slate-800">Detalle de Guía {selectedGuide.numero_guia}</h3>
-                            <button onClick={() => setSelectedGuide(null)} className="text-slate-400 hover:text-slate-600">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transition-colors">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-700/30">
+                            <h3 className="font-bold text-lg text-slate-800 dark:text-white">Detalle de Guía {selectedGuide.numero_guia}</h3>
+                            <button onClick={() => setSelectedGuide(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                 <FileText size={20} />
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <p className="text-slate-500">Proveedor</p>
-                                    <p className="font-medium text-slate-800">{selectedGuide.proveedor_nombre || selectedGuide.proveedor}</p>
+                                    <p className="text-slate-500 dark:text-slate-400">Proveedor</p>
+                                    <p className="font-medium text-slate-800 dark:text-white">{selectedGuide.proveedor_nombre || selectedGuide.proveedor}</p>
                                 </div>
                                 <div>
-                                    <p className="text-slate-500">Fecha Recepción</p>
-                                    <p className="font-medium text-slate-800">{selectedGuide.fecha || selectedGuide.fecha_recepcion}</p>
+                                    <p className="text-slate-500 dark:text-slate-400">Fecha Recepción</p>
+                                    <p className="font-medium text-slate-800 dark:text-white">{selectedGuide.fecha || selectedGuide.fecha_recepcion}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500">Orden de Compra</p>
@@ -531,20 +531,20 @@ export default function DeliveryGuides() {
                                 </div>
                             </div>
 
-                            <div className="border rounded-lg overflow-hidden">
+                            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="bg-slate-50 text-slate-600">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
                                         <tr>
                                             <th className="px-4 py-2">Producto</th>
                                             <th className="px-4 py-2 text-center">U.M.</th>
                                             <th className="px-4 py-2 text-right">Cant. Recibida</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {selectedGuide.items?.map((item, idx) => (
-                                            <tr key={idx}>
+                                            <tr key={idx} className="dark:text-slate-200">
                                                 <td className="px-4 py-2">{item.producto}</td>
-                                                <td className="px-4 py-2 text-center text-slate-500">{item.unidad_medida || item.um}</td>
+                                                <td className="px-4 py-2 text-center text-slate-500 dark:text-slate-400">{item.unidad_medida || item.um}</td>
                                                 <td className="px-4 py-2 text-right font-medium">{Number(item.cantidad_recibida || item.cantidad || 0).toFixed(2)}</td>
                                             </tr>
                                         ))}
@@ -552,10 +552,10 @@ export default function DeliveryGuides() {
                                 </table>
                             </div>
                         </div>
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                             <button
                                 onClick={() => setSelectedGuide(null)}
-                                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium"
+                                className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium"
                             >
                                 Cerrar
                             </button>

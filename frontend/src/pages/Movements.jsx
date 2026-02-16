@@ -93,17 +93,17 @@ export default function Movements() {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-slate-800">Movimientos de Almacén</h2>
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Movimientos de Almacén</h2>
+                <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg transition-colors">
                     <button
                         onClick={() => setType('TRASLADO')}
-                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-all ${type === 'TRASLADO' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500'}`}
+                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-all ${type === 'TRASLADO' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                         <ArrowRightLeft className="w-4 h-4 mr-2" /> Traslado
                     </button>
                     <button
                         onClick={() => setType('SALIDA')}
-                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-all ${type === 'SALIDA' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500'}`}
+                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-all ${type === 'SALIDA' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                     >
                         <LogOut className="w-4 h-4 mr-2" /> Salida
                     </button>
@@ -112,12 +112,12 @@ export default function Movements() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Header */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4 transition-colors">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha</label>
                         <input
                             type="date"
-                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.fecha}
                             onChange={e => setFormData({ ...formData, fecha: e.target.value })}
                         />
@@ -126,9 +126,9 @@ export default function Movements() {
                     {type === 'TRASLADO' ? (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Almacén Origen</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Almacén Origen</label>
                                 <select
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.origen_id}
                                     onChange={e => setFormData({ ...formData, origen_id: e.target.value })}
                                 >
@@ -136,9 +136,9 @@ export default function Movements() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Almacén Destino</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Almacén Destino</label>
                                 <select
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.destino_id}
                                     onChange={e => setFormData({ ...formData, destino_id: e.target.value })}
                                 >
@@ -149,9 +149,9 @@ export default function Movements() {
                     ) : (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo Salida</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo Salida</label>
                                 <select
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={formData.tipo_salida}
                                     onChange={e => setFormData({ ...formData, tipo_salida: e.target.value })}
                                 >
@@ -162,10 +162,10 @@ export default function Movements() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Destino / Cliente</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Destino / Cliente</label>
                                 <input
                                     type="text"
-                                    className="w-full p-2 border border-slate-200 rounded-lg"
+                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
                                     value={formData.destino_salida}
                                     onChange={e => setFormData({ ...formData, destino_salida: e.target.value })}
                                 />
@@ -174,10 +174,10 @@ export default function Movements() {
                     )}
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Observaciones</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observaciones</label>
                         <input
                             type="text"
-                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
                             value={formData.observaciones}
                             onChange={e => setFormData({ ...formData, observaciones: e.target.value })}
                         />
@@ -185,21 +185,21 @@ export default function Movements() {
                 </div>
 
                 {/* Items */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-slate-800">Items a Mover</h3>
-                        <button type="button" onClick={addItem} className="flex items-center text-blue-600 font-medium">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Items a Mover</h3>
+                        <button type="button" onClick={addItem} className="flex items-center text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300">
                             <Plus className="w-4 h-4 mr-1" /> Agregar
                         </button>
                     </div>
 
                     <div className="space-y-3">
                         {formData.items.map((item, idx) => (
-                            <div key={idx} className="flex gap-3 items-end border-b border-slate-50 pb-3">
+                            <div key={idx} className="flex gap-3 items-end border-b border-slate-50 dark:border-slate-700 pb-3">
                                 <div className="flex-1">
-                                    <label className="text-xs text-slate-500">Producto</label>
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">Producto</label>
                                     <select
-                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none"
                                         value={item.pid}
                                         onChange={e => updateItem(idx, 'pid', e.target.value)}
                                     >
@@ -211,9 +211,9 @@ export default function Movements() {
                                 </div>
                                 {type === 'SALIDA' && (
                                     <div className="w-1/4">
-                                        <label className="text-xs text-slate-500">Desde Almacén</label>
+                                        <label className="text-xs text-slate-500 dark:text-slate-400">Desde Almacén</label>
                                         <select
-                                            className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+                                            className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none"
                                             value={item.almacen_id}
                                             onChange={e => updateItem(idx, 'almacen_id', e.target.value)}
                                         >
@@ -222,15 +222,15 @@ export default function Movements() {
                                     </div>
                                 )}
                                 <div className="w-24">
-                                    <label className="text-xs text-slate-500">Cantidad</label>
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">Cantidad</label>
                                     <input
                                         type="number" min="0.01" step="0.01"
-                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm text-right"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-right bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none"
                                         value={item.cantidad}
                                         onChange={e => updateItem(idx, 'cantidad', e.target.value)}
                                     />
                                 </div>
-                                <button type="button" onClick={() => removeItem(idx)} className="pb-2 text-red-400 hover:text-red-600">
+                                <button type="button" onClick={() => removeItem(idx)} className="pb-2 text-red-400 hover:text-red-600 dark:hover:text-red-300">
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
@@ -256,7 +256,7 @@ export default function Movements() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`px-6 py-3 bg-slate-800 text-white rounded-xl shadow-lg hover:bg-slate-900 transition-all ${loading ? 'opacity-70' : ''}`}
+                        className={`px-6 py-3 bg-slate-800 dark:bg-blue-600 text-white rounded-xl shadow-lg hover:bg-slate-900 dark:hover:bg-blue-700 transition-all ${loading ? 'opacity-70' : ''}`}
                     >
                         {loading ? 'Procesando...' : `Registrar ${type.toLowerCase()}`}
                     </button>

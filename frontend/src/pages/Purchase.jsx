@@ -251,22 +251,22 @@ export default function Purchase() {
             />
 
             {/* Tabs */}
-            <div className="flex space-x-2 border-b border-slate-200">
+            <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700">
                 <button
                     onClick={() => setView('register')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'register' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'register' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     📝 Registrar Compra
                 </button>
                 <button
                     onClick={() => setView('history')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     📜 Historial (Resumen)
                 </button>
                 <button
                     onClick={() => setView('detailed')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'detailed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'detailed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     🔍 Historial (Detallado)
                 </button>
@@ -275,17 +275,17 @@ export default function Purchase() {
             {/* Register View */}
             {view === 'register' && (
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {successMsg && <div className="p-4 bg-green-50 text-green-700 rounded-lg">{successMsg}</div>}
-                    {errorMsg && <div className="p-4 bg-red-50 text-red-700 rounded-lg">{errorMsg}</div>}
+                    {successMsg && <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg">{successMsg}</div>}
+                    {errorMsg && <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg">{errorMsg}</div>}
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor *</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Proveedor *</label>
                                 <div className="flex gap-2">
                                     <select
                                         required
-                                        className="w-full p-2 border border-slate-200 rounded-lg"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         value={formData.proveedor_id}
                                         onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}
                                     >
@@ -295,7 +295,7 @@ export default function Purchase() {
                                     <button
                                         type="button"
                                         onClick={() => setIsProviderModalOpen(true)}
-                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                        className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                                         title="Nuevo Proveedor"
                                     >
                                         <Plus size={20} />
@@ -303,66 +303,54 @@ export default function Purchase() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
-                                <input type="date" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.fecha} onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha</label>
+                                <input type="date" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.fecha} onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Serie *</label>
-                                <input required type="text" placeholder="F001" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.serie} onChange={e => setFormData({ ...formData, serie: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Serie *</label>
+                                <input required type="text" placeholder="F001" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.serie} onChange={e => setFormData({ ...formData, serie: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Número *</label>
-                                <input required type="text" placeholder="000123" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número *</label>
+                                <input required type="text" placeholder="000123" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value })} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Moneda</label>
-                                <select className="w-full p-2 border border-slate-200 rounded-lg" value={formData.moneda} onChange={e => setFormData({ ...formData, moneda: e.target.value })}>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Moneda</label>
+                                <select className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.moneda} onChange={e => setFormData({ ...formData, moneda: e.target.value })}>
                                     <option value="PEN">Soles (PEN)</option>
                                     <option value="USD">Dólares (USD)</option>
                                 </select>
                             </div>
                             {formData.moneda === 'USD' && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Cambio</label>
-                                    <input type="number" step="0.001" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.tc} onChange={e => setFormData({ ...formData, tc: e.target.value })} />
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Cambio</label>
+                                    <input type="number" step="0.001" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.tc} onChange={e => setFormData({ ...formData, tc: e.target.value })} />
                                 </div>
                             )}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Tasa IGV (%)</label>
-                                <input type="number" step="0.01" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.tasa_igv} onChange={e => setFormData({ ...formData, tasa_igv: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tasa IGV (%)</label>
+                                <input type="number" step="0.01" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.tasa_igv} onChange={e => setFormData({ ...formData, tasa_igv: e.target.value })} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Guide Import Section */}
                     {formData.proveedor_id && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center gap-4">
+                        <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30 flex items-center gap-4 transition-colors">
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-blue-800 mb-1">
+                                <label className="block text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
                                     Importar desde Guía de Remisión (Opcional)
                                 </label>
                                 <select
-                                    className="w-full p-2 border border-blue-200 rounded text-sm"
+                                    className="w-full p-2 border border-blue-200 dark:border-blue-800 rounded text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
                                     value={selectedGuideId}
                                     onChange={(e) => handleImportGuide(e.target.value)}
                                 >
                                     <option value="">-- Seleccionar Guía --</option>
                                     {guides
-                                        .filter(g => g.proveedor == suppliers.find(s => s.id == formData.proveedor_id)?.razon_social) // Filter by provider name logic matching
-                                        // Note: guides endpoint returns 'proveedor' name, not ID. suppliers has 'razon_social'.
-                                        // Wait, backend 'obtener_guias' returns 'proveedor' (name).
-                                        // Ideally we filter by ID if available, but list endpoint didn't verify ID return.
-                                        // Let's verify backend 'obtener_guias' -> returns g.id, g.fecha..., p.razon_social as proveedor.
-                                        // It DOES NOT return p.id as provider_id. 
-                                        // So filtering by name is risky but necessary unless I update backend.
-                                        // OR I just show all guides. 
-                                        // Let's check backend code again?
-                                        // Backend line 2470: p.razon_social as proveedor.
-                                        // It does not select p.id.
-                                        // I'll filter by name for now, or just show all if no match.
+                                        .filter(g => g.proveedor == suppliers.find(s => s.id == formData.proveedor_id)?.razon_social)
                                         .map(g => (
                                             <option key={g.id} value={g.id}>
                                                 {g.numero_guia} | {g.fecha_recepcion} | {g.proveedor}
@@ -370,16 +358,16 @@ export default function Purchase() {
                                         ))}
                                 </select>
                             </div>
-                            <div className="text-xs text-blue-600 max-w-md">
+                            <div className="text-xs text-blue-600 dark:text-blue-400 max-w-md">
                                 Seleccione una guía para cargar automáticamente los productos recibidos y vincular la factura.
                             </div>
                         </div>
                     )}
 
                     {/* GRID FOR ITEMS */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold text-slate-800">Items de Compra</h3>
+                            <h3 className="font-semibold text-slate-800 dark:text-white">Items de Compra</h3>
                             <button type="button" onClick={addRow} className="flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
                                 <Plus size={16} className="mr-1" /> Agregar Producto
                             </button>
@@ -388,7 +376,7 @@ export default function Purchase() {
                         {formData.items.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-slate-50 text-slate-700 font-semibold">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold">
                                         <tr>
                                             <th className="px-4 py-3 text-left">Producto *</th>
                                             <th className="px-4 py-3 text-left">U.M.</th>
@@ -398,33 +386,34 @@ export default function Purchase() {
                                             <th className="px-4 py-3"></th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {formData.items.map((item, idx) => {
                                             const subtotal = (item.cantidad || 0) * (item.precio_unitario || 0)
                                             return (
-                                                <tr key={idx} className="hover:bg-slate-50">
+                                                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                                     <td className="px-4 py-3 w-[400px]">
                                                         <ProductSearch
                                                             products={products}
                                                             value={item.pid}
                                                             onChange={(val) => updateItem(idx, 'pid', val)}
                                                             required={true}
+                                                            isDark={true}
                                                         />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <input type="text" disabled className="w-20 p-2 border border-slate-200 rounded text-sm bg-slate-50" value={item.um} readOnly />
+                                                        <input type="text" disabled className="w-20 p-2 border border-slate-200 dark:border-slate-600 rounded text-sm bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-400" value={item.um} readOnly />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <input required type="number" step="0.01" min="0.01" className="w-24 p-2 border border-slate-200 rounded text-sm text-right" value={item.cantidad} onChange={e => updateItem(idx, 'cantidad', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'cantidad', val.toFixed(2)) }} />
+                                                        <input required type="number" step="0.01" min="0.01" className="w-24 p-2 border border-slate-200 dark:border-slate-600 rounded text-sm text-right bg-white dark:bg-slate-700 text-slate-800 dark:text-white" value={item.cantidad} onChange={e => updateItem(idx, 'cantidad', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'cantidad', val.toFixed(2)) }} />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <input required type="number" step="0.01" min="0" className="w-28 p-2 border border-slate-200 rounded text-sm text-right" value={item.precio_unitario} onChange={e => updateItem(idx, 'precio_unitario', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'precio_unitario', val.toFixed(2)) }} />
+                                                        <input required type="number" step="0.01" min="0" className="w-28 p-2 border border-slate-200 dark:border-slate-600 rounded text-sm text-right bg-white dark:bg-slate-700 text-slate-800 dark:text-white" value={item.precio_unitario} onChange={e => updateItem(idx, 'precio_unitario', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'precio_unitario', val.toFixed(2)) }} />
                                                     </td>
-                                                    <td className="px-4 py-3 text-right font-medium">
+                                                    <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">
                                                         S/ {subtotal.toFixed(2)}
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700">
+                                                        <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </td>
@@ -432,7 +421,7 @@ export default function Purchase() {
                                             )
                                         })}
                                     </tbody>
-                                    <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-200">
+                                    <tfoot className="bg-slate-50 dark:bg-slate-700/50 font-bold border-t-2 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white">
                                         <tr>
                                             <td colSpan="4" className="px-4 py-3 text-right">SUBTOTAL (Valor Neto):</td>
                                             <td className="px-4 py-3 text-right">
@@ -464,7 +453,7 @@ export default function Purchase() {
                                         </tr>
                                         <tr className="text-lg">
                                             <td colSpan="4" className="px-4 py-3 text-right">TOTAL:</td>
-                                            <td className="px-4 py-3 text-right text-blue-600">
+                                            <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400">
                                                 S/ {formData.items.reduce((sum, i) => sum + ((i.cantidad || 0) * (i.precio_unitario || 0)), 0).toFixed(2)}
                                             </td>
                                             <td></td>
@@ -473,7 +462,7 @@ export default function Purchase() {
                                 </table>
                             </div>
                         ) : (
-                            <div className="text-center py-8 text-slate-400">
+                            <div className="text-center py-8 text-slate-400 dark:text-slate-500">
                                 Haz clic en "Agregar Producto" para empezar
                             </div>
                         )}
@@ -496,10 +485,10 @@ export default function Purchase() {
                         <div className="flex justify-end">
                             <ExportButton data={purchaseHistory} filename="historial_compras_resumen" />
                         </div>
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-100 dark:border-slate-700">
                                         <tr>
                                             <th className="px-6 py-4">Fecha</th>
                                             <th className="px-6 py-4">Documento</th>
@@ -509,21 +498,21 @@ export default function Purchase() {
                                             <th className="px-6 py-4 text-right">Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {purchaseHistory.map((p, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50">
-                                                <td className="px-6 py-4">{p.fecha}</td>
-                                                <td className="px-6 py-4 font-mono">{p.numero_documento}</td>
-                                                <td className="px-6 py-4 font-mono text-blue-600">
+                                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{p.fecha}</td>
+                                                <td className="px-6 py-4 font-mono text-slate-600 dark:text-slate-400">{p.numero_documento}</td>
+                                                <td className="px-6 py-4 font-mono text-blue-600 dark:text-blue-400">
                                                     {p.oc_id ? `OC-${String(p.oc_id).padStart(6, '0')}` : '-'}
                                                 </td>
-                                                <td className="px-6 py-4">{p.proveedor}</td>
-                                                <td className="px-6 py-4">{p.moneda}</td>
-                                                <td className="px-6 py-4 text-right font-medium">{p.moneda === 'USD' ? '$' : 'S/'} {p.total_final?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{p.proveedor}</td>
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{p.moneda}</td>
+                                                <td className="px-6 py-4 text-right font-medium text-slate-800 dark:text-slate-200">{p.moneda === 'USD' ? '$' : 'S/'} {p.total_final?.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                         {purchaseHistory.length === 0 && (
-                                            <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
+                                            <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">No hay registros</td></tr>
                                         )}
                                     </tbody>
                                 </table>
@@ -540,10 +529,10 @@ export default function Purchase() {
                         <div className="flex justify-end">
                             <ExportButton data={detailedHistory} filename="historial_compras_detallado" />
                         </div>
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-100 dark:border-slate-700">
                                         <tr>
                                             <th className="px-6 py-4">Fecha</th>
                                             <th className="px-6 py-4">Documento</th>
@@ -554,20 +543,20 @@ export default function Purchase() {
                                             <th className="px-6 py-4 text-right">Subtotal</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {detailedHistory.map((d, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50">
-                                                <td className="px-6 py-4">{d.fecha}</td>
-                                                <td className="px-6 py-4 font-mono text-xs">{d.serie}-{d.numero}</td>
-                                                <td className="px-6 py-4">{d.proveedor}</td>
-                                                <td className="px-6 py-4">{d.producto}</td>
-                                                <td className="px-6 py-4 text-right">{d.cantidad?.toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-right">{d.moneda === 'USD' ? '$' : 'S/'} {d.precio_unitario?.toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-right font-medium">{d.moneda === 'USD' ? '$' : 'S/'} {d.subtotal?.toFixed(2)}</td>
+                                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{d.fecha}</td>
+                                                <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{d.serie}-{d.numero}</td>
+                                                <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{d.proveedor}</td>
+                                                <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{d.producto}</td>
+                                                <td className="px-6 py-4 text-right text-slate-700 dark:text-slate-300">{d.cantidad?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{d.moneda === 'USD' ? '$' : 'S/'} {d.precio_unitario?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-right font-medium text-slate-800 dark:text-slate-200">{d.moneda === 'USD' ? '$' : 'S/'} {d.subtotal?.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                         {detailedHistory.length === 0 && (
-                                            <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400">No hay registros</td></tr>
+                                            <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">No hay registros</td></tr>
                                         )}
                                     </tbody>
                                 </table>

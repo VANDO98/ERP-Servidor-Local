@@ -372,26 +372,26 @@ export default function Orders() {
 
     return (
         <div className="space-y-6">
-            <div className="flex space-x-2 border-b border-slate-200">
+            <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700">
                 <button
                     onClick={() => setView('list')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     📋 Listado
                 </button>
                 <button
                     onClick={handleCreateWrapper}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'create' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'create' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     ➕ Nueva Orden (OC)
                 </button>
             </div>
 
             {view === 'list' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-slate-700 font-semibold">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold">
                                 <tr>
                                     <th className="px-6 py-4">Orden #</th>
                                     <th className="px-6 py-4">Proveedor</th>
@@ -401,16 +401,16 @@ export default function Orders() {
                                     <th className="px-6 py-4 text-center">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                 {orders.length > 0 ? (
                                     orders.map((order) => (
-                                        <tr key={order.id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 font-mono text-xs">
+                                        <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                            <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
                                                 {(companyConfig?.settings?.oc_serie || 'OC')}-{String(order.id).padStart(6, '0')}
                                             </td>
-                                            <td className="px-6 py-4 font-medium">{order.proveedor_nombre}</td>
-                                            <td className="px-6 py-4 text-slate-600">{order.fecha}</td>
-                                            <td className="px-6 py-4 font-bold text-slate-800">
+                                            <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{order.proveedor_nombre}</td>
+                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{order.fecha}</td>
+                                            <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">
                                                 {order.moneda === 'USD' ? '$' : 'S/'} {parseFloat(order.total).toFixed(2)}
                                             </td>
                                             <td className="px-6 py-4">
@@ -456,7 +456,7 @@ export default function Orders() {
                                         </tr>
                                     ))
                                 ) : (
-                                    <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400">No hay órdenes registradas</td></tr>
+                                    <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">No hay órdenes registradas</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -466,30 +466,30 @@ export default function Orders() {
 
             {view === 'create' && (
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor *</label>
-                                <select required className="w-full p-2 border border-slate-200 rounded-lg" value={formData.proveedor_id} onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Proveedor *</label>
+                                <select required className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.proveedor_id} onChange={e => setFormData({ ...formData, proveedor_id: e.target.value })}>
                                     <option value="">Seleccionar...</option>
                                     {suppliers.map(p => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Emisión</label>
-                                <input type="date" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.fecha} onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha Emisión</label>
+                                <input type="date" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.fecha} onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Entrega Est.</label>
-                                <input type="date" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.fecha_entrega} onChange={e => setFormData({ ...formData, fecha_entrega: e.target.value })} />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha Entrega Est.</label>
+                                <input type="date" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.fecha_entrega} onChange={e => setFormData({ ...formData, fecha_entrega: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Lugar de Entrega</label>
-                                <input type="text" className="w-full p-2 border border-slate-200 rounded-lg" value={formData.direccion_entrega} onChange={e => setFormData({ ...formData, direccion_entrega: e.target.value })} placeholder="Dirección de entrega" />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Lugar de Entrega</label>
+                                <input type="text" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.direccion_entrega} onChange={e => setFormData({ ...formData, direccion_entrega: e.target.value })} placeholder="Dirección de entrega" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Moneda</label>
-                                <select className="w-full p-2 border border-slate-200 rounded-lg" value={formData.moneda} onChange={e => setFormData({ ...formData, moneda: e.target.value })}>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Moneda</label>
+                                <select className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.moneda} onChange={e => setFormData({ ...formData, moneda: e.target.value })}>
                                     <option value="PEN">Soles (PEN)</option>
                                     <option value="USD">Dólares (USD)</option>
                                 </select>
@@ -497,10 +497,10 @@ export default function Orders() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                         <table className="w-full text-left text-sm mb-4">
                             <thead>
-                                <tr className="text-slate-500 border-b border-slate-200">
+                                <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                                     <th className="pb-3 w-1/3">Producto</th>
                                     <th className="pb-3 w-24">Cantidad</th>
                                     <th className="pb-3 w-32">Precio (Sin IGV)</th>
@@ -518,6 +518,7 @@ export default function Orders() {
                                                 value={item.pid}
                                                 onChange={(val) => updateItem(index, 'pid', val)}
                                                 required={true}
+                                                isDark={true}
                                             />
                                         </td>
                                         <td className="py-2">
@@ -525,7 +526,7 @@ export default function Orders() {
                                                 type="number"
                                                 min="0.1"
                                                 step="0.1"
-                                                className="w-full p-2 border border-slate-200 rounded"
+                                                className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
                                                 value={item.cantidad}
                                                 onChange={(e) => updateItem(index, 'cantidad', e.target.value)}
                                                 onBlur={(e) => {
@@ -542,7 +543,7 @@ export default function Orders() {
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
-                                                className="w-full p-2 border border-slate-200 rounded"
+                                                className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
                                                 value={item.precio_unitario}
                                                 onChange={(e) => updateItem(index, 'precio_unitario', e.target.value)}
                                                 onBlur={(e) => {
@@ -582,10 +583,10 @@ export default function Orders() {
                         </button>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Observaciones / Condiciones</label>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observaciones / Condiciones</label>
                         <textarea
-                            className="w-full p-2 border border-slate-200 rounded-lg h-24"
+                            className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg h-24 bg-white dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400"
                             value={formData.observaciones}
                             onChange={e => setFormData({ ...formData, observaciones: e.target.value })}
                             placeholder="Ingrese observaciones, condiciones de pago, lugar de entrega, etc."
@@ -593,10 +594,10 @@ export default function Orders() {
                     </div>
 
                     <div className="flex justify-end gap-3">
-                        <button type="button" onClick={() => setView('list')} className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 font-medium">
+                        <button type="button" onClick={() => setView('list')} className="px-6 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium">
                             Cancelar
                         </button>
-                        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all">
+                        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 dark:shadow-blue-900/20 transition-all">
                             {loading ? 'Guardando...' : 'Guardar Orden'}
                         </button>
                     </div>
@@ -621,25 +622,25 @@ export default function Orders() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-4 border-b border-slate-100 pb-2">Información del Proveedor</h3>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <h3 className="font-bold text-slate-700 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">Información del Proveedor</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-slate-400 uppercase">Razón Social</p>
-                                <p className="font-medium text-slate-800 text-lg">{selectedOrder.proveedor_nombre}</p>
+                                <p className="font-medium text-slate-800 dark:text-white text-lg">{selectedOrder.proveedor_nombre}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400 uppercase">RUC / ID</p>
-                                <p className="font-medium text-slate-800">{selectedOrder.proveedor_ruc || 'N/A'}</p>
+                                <p className="font-medium text-slate-800 dark:text-slate-200">{selectedOrder.proveedor_ruc || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-4 border-b border-slate-100 pb-2">Detalle de Items</h3>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <h3 className="font-bold text-slate-700 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">Detalle de Items</h3>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-slate-600">
+                                <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
                                     <tr>
                                         <th className="px-4 py-3">#</th>
                                         <th className="px-4 py-3">Producto</th>
@@ -649,17 +650,17 @@ export default function Orders() {
                                         <th className="px-4 py-3 text-right">Total</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                     {(selectedOrder.items || []).map((item, idx) => (
-                                        <tr key={idx}>
+                                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                                             <td className="px-4 py-3 text-slate-400 font-mono text-xs">{idx + 1}</td>
-                                            <td className="px-4 py-3 font-medium text-slate-800">{item.Producto || item.producto}</td>
+                                            <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{item.Producto || item.producto}</td>
                                             <td className="px-4 py-3 text-center text-slate-500">{item.um || item.UM}</td>
-                                            <td className="px-4 py-3 text-right font-medium">{Number(item.cantidad).toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-right text-slate-600">
+                                            <td className="px-4 py-3 text-right font-medium text-slate-700 dark:text-slate-300">{Number(item.cantidad).toFixed(2)}</td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400">
                                                 {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {Number(item.precio_unitario).toFixed(2)}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-bold text-slate-800">
+                                            <td className="px-4 py-3 text-right font-bold text-slate-800 dark:text-white">
                                                 {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {(Number(item.cantidad) * Number(item.precio_unitario)).toFixed(2)}
                                             </td>
                                         </tr>
@@ -679,7 +680,7 @@ export default function Orders() {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="5" className="pt-2 text-right font-bold text-xl text-slate-800">TOTAL:</td>
+                                        <td colSpan="5" className="pt-2 text-right font-bold text-xl text-slate-800 dark:text-white">TOTAL:</td>
                                         <td className="pt-2 text-right font-bold text-xl text-blue-600">
                                             {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {Number(selectedOrder.total || 0).toFixed(2)}
                                         </td>

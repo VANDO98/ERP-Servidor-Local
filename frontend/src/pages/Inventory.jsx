@@ -105,8 +105,8 @@ export default function Inventory() {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Inventario</h2>
-                    <p className="text-slate-500">Gestión de existencias y valorización</p>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Inventario</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Gestión de existencias y valorización</p>
                 </div>
                 <button
                     onClick={() => setIsWarehouseModalOpen(true)}
@@ -118,22 +118,22 @@ export default function Inventory() {
             </div>
 
             {/* Tabs */}
-            <div className="flex space-x-2 border-b border-slate-200">
+            <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700">
                 <button
                     onClick={() => setView('summary')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'summary' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'summary' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     💰 Resumen Valorizado (FIFO)
                 </button>
                 <button
                     onClick={() => setView('detailed')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'detailed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'detailed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     📦 Por Almacén (Detallado)
                 </button>
                 <button
                     onClick={() => setView('kardex')}
-                    className={`px-4 py-2 font-medium transition-colors ${view === 'kardex' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors ${view === 'kardex' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                 >
                     📜 Kardex por Producto
                 </button>
@@ -148,14 +148,14 @@ export default function Inventory() {
                             <input
                                 type="text"
                                 placeholder="Buscar por código o nombre..."
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         {view === 'detailed' && (
                             <select
-                                className="p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="p-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
                                 value={selectedWarehouse}
                                 onChange={(e) => setSelectedWarehouse(e.target.value)}
                             >
@@ -171,13 +171,13 @@ export default function Inventory() {
                         />
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
                         {loading ? (
                             <div className="p-8 text-center text-slate-400">Cargando...</div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-slate-50 text-slate-700 font-semibold">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold">
                                         <tr>
                                             {view === 'summary' ? (
                                                 <>
@@ -202,27 +202,27 @@ export default function Inventory() {
                                             )}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {filteredData.length > 0 ? (
                                             filteredData.map((item, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50">
+                                                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                                     {view === 'summary' ? (
                                                         <>
-                                                            <td className="px-6 py-4 font-mono text-xs">{item.sku || 'N/A'}</td>
-                                                            <td className="px-6 py-4 font-medium text-slate-800">{item.producto}</td>
-                                                            <td className="px-6 py-4 text-slate-600">{item.categoria}</td>
-                                                            <td className="px-6 py-4 text-center text-slate-600">{item.unidad}</td>
-                                                            <td className="px-6 py-4 text-right font-medium">{item.stock}</td>
-                                                            <td className="px-6 py-4 text-right text-slate-600">
+                                                            <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{item.sku || 'N/A'}</td>
+                                                            <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{item.producto}</td>
+                                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{item.categoria}</td>
+                                                            <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-400">{item.unidad}</td>
+                                                            <td className="px-6 py-4 text-right font-medium text-slate-700 dark:text-slate-300">{item.stock}</td>
+                                                            <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">
                                                                 S/ {parseFloat(item.costo_unitario || 0).toFixed(2)}
                                                             </td>
-                                                            <td className="px-6 py-4 text-right font-bold text-blue-600">
+                                                            <td className="px-6 py-4 text-right font-bold text-blue-600 dark:text-blue-400">
                                                                 S/ {parseFloat(item.valor_total || 0).toFixed(2)}
                                                             </td>
                                                             <td className="px-6 py-4 text-center">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.estado === 'Normal'
-                                                                    ? 'bg-emerald-100 text-emerald-700'
-                                                                    : 'bg-amber-100 text-amber-700'
+                                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                                                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                                                                     }`}>
                                                                     {item.estado}
                                                                 </span>
@@ -230,12 +230,12 @@ export default function Inventory() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <td className="px-6 py-4 font-mono text-xs">{item.Codigo || 'N/A'}</td>
-                                                            <td className="px-6 py-4">{item.Producto}</td>
-                                                            <td className="px-6 py-4">{item.Almacen}</td>
-                                                            <td className="px-6 py-4 text-right">{(item.Stock || 0).toFixed(2)}</td>
-                                                            <td className="px-6 py-4 text-right">S/ {(item.CostoUnitFIFO || 0).toFixed(2)}</td>
-                                                            <td className="px-6 py-4 text-right font-medium text-green-600">S/ {(item.ValorTotal || 0).toFixed(2)}</td>
+                                                            <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{item.Codigo || 'N/A'}</td>
+                                                            <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{item.Producto}</td>
+                                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{item.Almacen}</td>
+                                                            <td className="px-6 py-4 text-right text-slate-700 dark:text-slate-300">{(item.Stock || 0).toFixed(2)}</td>
+                                                            <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">S/ {(item.CostoUnitFIFO || 0).toFixed(2)}</td>
+                                                            <td className="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">S/ {(item.ValorTotal || 0).toFixed(2)}</td>
                                                         </>
                                                     )}
                                                 </tr>
@@ -258,7 +258,7 @@ export default function Inventory() {
             {/* Kardex View */}
             {view === 'kardex' && (
                 <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                         <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
                             <div className="flex-1 space-y-4">
                                 <div className="flex gap-4">
@@ -271,7 +271,7 @@ export default function Inventory() {
                                             onChange={() => setKardexType('general')}
                                             className="text-blue-600 focus:ring-blue-500"
                                         />
-                                        <span className="text-slate-700 font-medium">General (Todos)</span>
+                                        <span className="text-slate-700 dark:text-slate-300 font-medium">General (Todos)</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input
@@ -282,28 +282,38 @@ export default function Inventory() {
                                             onChange={() => setKardexType('product')}
                                             className="text-blue-600 focus:ring-blue-500"
                                         />
-                                        <span className="text-slate-700 font-medium">Por Producto</span>
+                                        <span className="text-slate-700 dark:text-slate-300 font-medium">Por Producto</span>
                                     </label>
                                 </div>
 
                                 <div className="flex gap-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
-                                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="p-2 border border-slate-200 rounded-lg text-sm" />
+                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Desde</label>
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={e => setStartDate(e.target.value)}
+                                            className="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
+                                        />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
-                                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="p-2 border border-slate-200 rounded-lg text-sm" />
+                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={e => setEndDate(e.target.value)}
+                                            className="p-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
+                                        />
                                     </div>
                                 </div>
 
                                 {kardexType === 'product' && (
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                             Seleccione Producto
                                         </label>
                                         <select
-                                            className="w-full md:w-96 p-2 border border-slate-200 rounded-lg"
+                                            className="w-full md:w-96 p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white"
                                             value={selectedProduct}
                                             onChange={(e) => setSelectedProduct(e.target.value)}
                                         >
@@ -322,10 +332,10 @@ export default function Inventory() {
                     </div>
 
                     {(kardexType === 'general' || selectedProduct) && (
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="bg-slate-50 text-slate-700 font-semibold">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold">
                                         <tr>
                                             <th className="px-6 py-4">Fecha</th>
                                             {kardexType === 'general' && <th className="px-6 py-4">Producto</th>}
@@ -336,21 +346,23 @@ export default function Inventory() {
                                             {kardexType === 'product' && <th className="px-6 py-4 text-right">Saldo</th>}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                         {kardexData.length > 0 ? (
                                             kardexData.map((k, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50">
-                                                    <td className="px-6 py-4">{k.Fecha}</td>
-                                                    {kardexType === 'general' && <td className="px-6 py-4 font-medium text-slate-800">{k.Producto}</td>}
+                                                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{k.Fecha}</td>
+                                                    {kardexType === 'general' && <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{k.Producto}</td>}
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 text-xs rounded ${k.TipoMovimiento.includes('COMPRA') || k.TipoMovimiento.includes('ENTRADA') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                        <span className={`px-2 py-1 text-xs rounded ${k.TipoMovimiento.includes('COMPRA') || k.TipoMovimiento.includes('ENTRADA')
+                                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
                                                             {k.TipoMovimiento}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-mono text-xs">{k.Documento}</td>
-                                                    <td className="px-6 py-4 text-right">{k.Entradas > 0 ? k.Entradas?.toFixed(2) : '-'}</td>
-                                                    <td className="px-6 py-4 text-right">{k.Salidas > 0 ? k.Salidas?.toFixed(2) : '-'}</td>
-                                                    {kardexType === 'product' && <td className="px-6 py-4 text-right font-medium">{k.Saldo?.toFixed(2)}</td>}
+                                                    <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">{k.Documento}</td>
+                                                    <td className="px-6 py-4 text-right text-slate-700 dark:text-slate-300">{k.Entradas > 0 ? k.Entradas?.toFixed(2) : '-'}</td>
+                                                    <td className="px-6 py-4 text-right text-slate-700 dark:text-slate-300">{k.Salidas > 0 ? k.Salidas?.toFixed(2) : '-'}</td>
+                                                    {kardexType === 'product' && <td className="px-6 py-4 text-right font-medium text-blue-600 dark:text-blue-400">{k.Saldo?.toFixed(2)}</td>}
                                                 </tr>
                                             ))
                                         ) : (
@@ -365,23 +377,23 @@ export default function Inventory() {
                             </div>
 
                             {kardexData.length > 0 && (
-                                <div className="bg-slate-50 px-6 py-4 border-t border-slate-100">
+                                <div className="bg-slate-50 dark:bg-slate-700/30 px-6 py-4 border-t border-slate-100 dark:border-slate-700">
                                     <div className="grid grid-cols-3 gap-4">
                                         <div>
-                                            <p className="text-xs text-slate-500 mb-1">Entradas Totales</p>
-                                            <p className="text-lg font-bold text-green-600">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Entradas Totales</p>
+                                            <p className="text-lg font-bold text-green-600 dark:text-green-400">
                                                 {kardexData.reduce((sum, k) => sum + (k.Entradas || 0), 0).toFixed(2)}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 mb-1">Salidas Totales</p>
-                                            <p className="text-lg font-bold text-red-600">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Salidas Totales</p>
+                                            <p className="text-lg font-bold text-red-600 dark:text-red-400">
                                                 {kardexData.reduce((sum, k) => sum + (k.Salidas || 0), 0).toFixed(2)}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 mb-1">Stock Actual</p>
-                                            <p className="text-lg font-bold text-blue-600">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Stock Actual</p>
+                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                                                 {kardexData.length > 0 ? kardexData[kardexData.length - 1].Saldo?.toFixed(2) : '0.00'}
                                             </p>
                                         </div>

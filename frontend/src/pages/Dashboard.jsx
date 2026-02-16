@@ -16,6 +16,19 @@ export default function Dashboard() {
     const [selectedAlert, setSelectedAlert] = useState(null)
     const [dashData, setDashData] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'))
+
+    useEffect(() => {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    setIsDark(document.documentElement.classList.contains('dark'))
+                }
+            })
+        })
+        observer.observe(document.documentElement, { attributes: true })
+        return () => observer.disconnect()
+    }, [])
 
     const setPeriodPreset = (preset) => {
         setPeriod(preset)
@@ -74,11 +87,11 @@ export default function Dashboard() {
                 return (
                     <div className="flex justify-between items-center w-full">
                         <div>
-                            <p className="font-bold text-slate-800">{item.nombre}</p>
-                            <p className="text-xs text-slate-500">Min: {item.min} {item.um}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-200">{item.nombre}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Min: {item.min} {item.um}</p>
                         </div>
                         <div className="text-right">
-                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
+                            <span className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded text-xs font-bold">
                                 {item.stock} {item.um}
                             </span>
                         </div>
@@ -88,8 +101,8 @@ export default function Dashboard() {
             if (type === 'sin_movimiento') {
                 return (
                     <div className="flex justify-between items-center w-full">
-                        <p className="font-medium text-slate-800">{item.nombre}</p>
-                        <p className="text-xs text-slate-500">Último mov: {item.ultimo_movimiento}</p>
+                        <p className="font-medium text-slate-800 dark:text-slate-200">{item.nombre}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Último mov: {item.ultimo_movimiento}</p>
                     </div>
                 )
             }
@@ -97,10 +110,10 @@ export default function Dashboard() {
                 return (
                     <div className="w-full">
                         <div className="flex justify-between text-sm">
-                            <span className="font-bold text-slate-700">{item.proveedor}</span>
-                            <span className="font-bold text-blue-600">S/ {item.monto?.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{item.proveedor}</span>
+                            <span className="font-bold text-blue-600 dark:text-blue-400">S/ {item.monto?.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                             <span>{item.documento}</span>
                             <span>{item.fecha}</span>
                         </div>
@@ -111,32 +124,32 @@ export default function Dashboard() {
                 return (
                     <div className="w-full">
                         <div className="flex justify-between text-sm">
-                            <span className="font-bold text-slate-700">{item.proveedor}</span>
-                            <span className="font-bold text-purple-600">S/ {item.monto?.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{item.proveedor}</span>
+                            <span className="font-bold text-purple-600 dark:text-purple-400">S/ {item.monto?.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                             <span>{item.fecha}</span>
                             <span>{item.cantidad} registros</span>
                         </div>
                     </div>
                 )
             }
-            return <span className="text-sm text-slate-700">{JSON.stringify(item)}</span>
+            return <span className="text-sm text-slate-700 dark:text-slate-300">{JSON.stringify(item)}</span>
         }
 
         const colorClasses = {
-            red: 'bg-red-50 text-red-700 border-red-100',
-            yellow: 'bg-yellow-50 text-yellow-700 border-yellow-100',
-            blue: 'bg-blue-50 text-blue-700 border-blue-100',
-            purple: 'bg-purple-50 text-purple-700 border-purple-100'
+            red: 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-100 dark:border-red-800',
+            yellow: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-100 dark:border-yellow-800',
+            blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800',
+            purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800'
         }
 
-        const headerClass = colorClasses[alert.color] || 'bg-slate-50 text-slate-800'
+        const headerClass = colorClasses[alert.color] || 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white'
 
         return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-                    <div className={`px-6 py-4 border-b flex justify-between items-center ${headerClass}`}>
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                    <div className={`px-6 py-4 border-b dark:border-slate-700 flex justify-between items-center ${headerClass}`}>
                         <h3 className="font-bold text-lg flex items-center gap-2">
                             {alert.icon}
                             {alert.title}
@@ -145,23 +158,23 @@ export default function Dashboard() {
                             <Activity size={18} />
                         </button>
                     </div>
-                    <div className="p-0 max-h-[60vh] overflow-y-auto bg-slate-50/50">
+                    <div className="p-0 max-h-[60vh] overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 custom-scrollbar">
                         {alert.items && alert.items.length > 0 ? (
-                            <ul className="divide-y divide-slate-100">
+                            <ul className="divide-y divide-slate-100 dark:divide-slate-700">
                                 {alert.items.map((item, idx) => (
-                                    <li key={idx} className="px-6 py-3 hover:bg-white transition-colors border-l-4 border-transparent hover:border-l-blue-500 bg-white mb-1 shadow-sm mx-2 first:mt-2 rounded my-1">
+                                    <li key={idx} className="px-6 py-3 hover:bg-white dark:hover:bg-slate-700/50 transition-colors border-l-4 border-transparent hover:border-l-blue-500 bg-white dark:bg-slate-800 mb-1 shadow-sm mx-2 first:mt-2 rounded my-1 dark:text-slate-300">
                                         {renderItem(item, alert.type)}
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <div className="p-8 text-center text-slate-400">
+                            <div className="p-8 text-center text-slate-400 dark:text-slate-500">
                                 No hay elementos para mostrar en esta alerta.
                             </div>
                         )}
                     </div>
-                    <div className="bg-white px-6 py-3 border-t border-slate-100 text-right">
-                        <button onClick={onClose} className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium text-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-800 px-6 py-3 border-t border-slate-100 dark:border-slate-700 text-right">
+                        <button onClick={onClose} className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-900 dark:hover:bg-slate-600 font-medium text-sm transition-colors shadow-sm">
                             Cerrar
                         </button>
                     </div>
@@ -233,29 +246,45 @@ export default function Dashboard() {
     const KPICard = ({ title, value, subtext, icon: Icon, colorClass, bgClass, tooltip }) => (
         <div
             title={tooltip}
-            className={`cursor-pointer rounded-xl shadow-sm p-6 border border-slate-100 transition-all hover:shadow-md ${bgClass || 'bg-white'}`}
+            className={`cursor-pointer rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-all hover:shadow-md ${bgClass || 'bg-white dark:bg-slate-800'}`}
         >
             <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-slate-500">{title}</p>
-                <div className={`p-2 rounded-lg ${colorClass.replace('text-', 'bg-').replace('600', '100').replace('500', '100')}`}>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
+                <div className={`p-2 rounded-lg ${colorClass.replace('text-', 'bg-').replace('600', '100').replace('500', '100')} dark:bg-opacity-20`}>
                     <Icon className={colorClass} size={20} />
                 </div>
             </div>
-            <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
-            {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{value}</h3>
+            {subtext && <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{subtext}</p>}
         </div>
     )
+
+    const CustomTooltip = ({ active, payload, label, formatter }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg">
+                    <p className="font-bold text-slate-700 dark:text-white mb-1">{label}</p>
+                    {payload.map((entry, index) => (
+                        <p key={index} className="text-sm" style={{ color: entry.color }}>
+                            {entry.name}: {formatter ? formatter(entry.value) : entry.value}
+                        </p>
+                    ))}
+                </div>
+            )
+        }
+        return null
+    }
 
     return (
         <div className="space-y-6 pb-8">
 
             {/* Header with Period Filter */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <Activity className="text-blue-600" /> Dashboard General
                     </h2>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                         Resumen del {new Date(startDate).toLocaleDateString('es-PE', { dateStyle: 'long' })} al {new Date(endDate).toLocaleDateString('es-PE', { dateStyle: 'long' })}
                     </p>
                 </div>
@@ -266,24 +295,24 @@ export default function Dashboard() {
                         <button
                             key={p}
                             onClick={() => setPeriodPreset(p)}
-                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${period === p ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${period === p ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}`}
                         >
                             {p === 'week' ? 'Semana' : p === 'month' ? 'Mes' : p === 'year' ? 'Año' : 'Todo'}
                         </button>
                     ))}
-                    <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                    <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-700 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-600">
                         <input
                             type="date"
                             value={startDate}
                             onChange={(e) => { setStartDate(e.target.value); setPeriod('custom') }}
-                            className="text-sm bg-transparent border-none focus:outline-none text-slate-700 font-medium"
+                            className="text-sm bg-transparent border-none focus:outline-none text-slate-700 dark:text-slate-200 font-medium color-scheme-dark"
                         />
                         <span className="text-slate-400">→</span>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => { setEndDate(e.target.value); setPeriod('custom') }}
-                            className="text-sm bg-transparent border-none focus:outline-none text-slate-700 font-medium"
+                            className="text-sm bg-transparent border-none focus:outline-none text-slate-700 dark:text-slate-200 font-medium color-scheme-dark"
                         />
                     </div>
                 </div>
@@ -318,7 +347,7 @@ export default function Dashboard() {
                     subtext="Productos agotados"
                     icon={AlertTriangle}
                     colorClass="text-red-500"
-                    bgClass={alertas.sin_stock?.count > 0 ? "bg-red-50" : "bg-white"}
+                    bgClass={alertas.sin_stock?.count > 0 ? "bg-red-50 dark:bg-red-900/20" : "bg-white dark:bg-slate-800"}
                     tooltip={alertas.sin_stock?.items?.length > 0 ? "Productos Agotados:\n" + alertas.sin_stock.items.join('\n') : "Sin alertas"}
                 />
                 <KPICard
@@ -331,8 +360,8 @@ export default function Dashboard() {
             </div>
 
             {/* Evolution Chart (Full Width) */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-                <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                <h3 className="font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                     <TrendingUp size={18} className="text-blue-500" /> Evolución de Compras
                 </h3>
                 {evolutionData.length > 0 ? (
@@ -345,31 +374,32 @@ export default function Dashboard() {
                                         <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:opacity-10" />
                                 <XAxis
                                     dataKey="name"
                                     fontSize={12}
                                     tickMargin={10}
                                     axisLine={false}
                                     tickLine={false}
+                                    tick={{ fill: '#94a3b8' }}
                                 />
                                 <YAxis
                                     fontSize={12}
                                     axisLine={false}
                                     tickLine={false}
                                     tickFormatter={(value) => `S/${(value / 1000).toFixed(0)}k`}
+                                    tick={{ fill: '#94a3b8' }}
                                 />
                                 <Tooltip
-                                    formatter={(value) => `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
-                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    content={<CustomTooltip formatter={(value) => `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`} />}
                                 />
                                 <Area type="monotone" dataKey="monto" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorMonto)" name="Monto Compra" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="h-72 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-lg">
-                        <TrendingUp size={48} className="mb-4 text-slate-300" />
+                    <div className="h-72 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                        <TrendingUp size={48} className="mb-4 text-slate-300 dark:text-slate-600" />
                         <p>Sin historial de compras en este periodo</p>
                     </div>
                 )}
@@ -378,8 +408,8 @@ export default function Dashboard() {
             {/* Analysis Row: Categories & Rotation */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Gasto por Categoría - Pie Chart */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <Package size={18} className="text-purple-500" /> Gasto por Categoría
                     </h3>
                     {categories.length > 0 ? (
@@ -394,14 +424,14 @@ export default function Dashboard() {
                                         outerRadius={100}
                                         paddingAngle={5}
                                         dataKey="value"
+                                        stroke="none"
                                     >
                                         {categoryData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value) => `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        content={<CustomTooltip formatter={(value) => `S/ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`} />}
                                     />
                                     <Legend
                                         layout="vertical"
@@ -413,16 +443,16 @@ export default function Dashboard() {
                             </ResponsiveContainer>
                         </div>
                     ) : (
-                        <div className="h-80 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-lg">
-                            <Package size={48} className="mb-4 text-slate-300" />
+                        <div className="h-80 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                            <Package size={48} className="mb-4 text-slate-300 dark:text-slate-600" />
                             <p>Sin datos de categorías</p>
                         </div>
                     )}
                 </div>
 
                 {/* Alta Rotación - Bar Chart */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <BarChart2 size={18} className="text-emerald-500" /> Alta Rotación (Top 5)
                     </h3>
                     {topRotationData.length > 0 ? (
@@ -433,8 +463,8 @@ export default function Dashboard() {
                                     layout="vertical"
                                     margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                    <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:opacity-10" />
+                                    <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: '#94a3b8' }} />
                                     <YAxis
                                         dataKey="name"
                                         type="category"
@@ -442,18 +472,19 @@ export default function Dashboard() {
                                         fontSize={11}
                                         tickLine={false}
                                         axisLine={false}
+                                        tick={{ fill: '#94a3b8' }}
                                     />
                                     <Tooltip
-                                        cursor={{ fill: '#f8fafc' }}
-                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: isDark ? '#334155' : '#f8fafc' }}
+                                        content={<CustomTooltip />}
                                     />
                                     <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} barSize={32} name="Total Salidas" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     ) : (
-                        <div className="h-80 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-lg">
-                            <BarChart2 size={48} className="mb-4 text-slate-300" />
+                        <div className="h-80 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                            <BarChart2 size={48} className="mb-4 text-slate-300 dark:text-slate-600" />
                             <p>Sin datos de rotación</p>
                         </div>
                     )}
@@ -463,20 +494,20 @@ export default function Dashboard() {
             {/* Tables Row: Stock & Providers */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Stock Crítico & Rotación */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <AlertTriangle size={18} className="text-orange-500" /> Stock Crítico (Top 15)
                     </h3>
                     <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                         {stockCritico.length > 0 ? (
                             stockCritico.slice(0, 15).map((item, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-white border border-slate-100 hover:border-blue-100 rounded-lg transition-colors group">
+                                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-600 hover:border-blue-100 rounded-lg transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-2 h-2 rounded-full ${item.Estado === 'Sin Stock' ? 'bg-red-500' : item.Estado === 'Crítico' ? 'bg-orange-500' : item.Estado === 'Bajo' ? 'bg-yellow-400' : 'bg-green-500'}`}></div>
                                         <div>
-                                            <p className="text-sm font-medium text-slate-700 group-hover:text-blue-600 transition-colors">{item.Producto}</p>
+                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{item.Producto}</p>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full uppercase tracking-wide font-bold ${item.Estado === 'Sin Stock' ? 'bg-red-100 text-red-700' : item.Estado === 'Crítico' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full uppercase tracking-wide font-bold ${item.Estado === 'Sin Stock' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : item.Estado === 'Crítico' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
                                                     {item.Estado}
                                                 </span>
                                                 <span className="text-xs text-slate-400">Min: {item.StockMinimo}</span>
@@ -484,7 +515,7 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="block text-sm font-bold text-slate-700">{item.Stock?.toFixed(2)}</span>
+                                        <span className="block text-sm font-bold text-slate-700 dark:text-slate-200">{item.Stock?.toFixed(2)}</span>
                                         <span className="text-xs text-slate-400">{item.UM}</span>
                                     </div>
                                 </div>
@@ -499,8 +530,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* Top Proveedores */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                         <ShoppingCart size={18} className="text-emerald-500" /> Top Proveedores
                     </h3>
                     <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
@@ -511,10 +542,10 @@ export default function Dashboard() {
                                 return (
                                     <div key={idx} className="relative pt-1">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-sm font-medium text-slate-700 truncate w-2/3" title={prov.Proveedor}>{prov.Proveedor}</span>
-                                            <span className="text-sm font-bold text-slate-800">S/ {prov.Monto?.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
+                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate w-2/3" title={prov.Proveedor}>{prov.Proveedor}</span>
+                                            <span className="text-sm font-bold text-slate-800 dark:text-white">S/ {prov.Monto?.toLocaleString('es-PE', { minimumFractionDigits: 0 })}</span>
                                         </div>
-                                        <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-slate-100">
+                                        <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-slate-100 dark:bg-slate-700">
                                             <div style={{ width: `${pct}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
                                         </div>
                                         <div className="text-right">
@@ -535,7 +566,7 @@ export default function Dashboard() {
 
             {/* Alertas Críticas Section */}
             <div>
-                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <AlertCircle size={20} className="text-red-500" /> Alertas Críticas
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -547,12 +578,12 @@ export default function Dashboard() {
                             color: 'red',
                             icon: <AlertCircle size={24} className="text-red-600" />
                         })}
-                        className="p-4 bg-red-50 rounded-xl border border-red-100 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
+                        className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-900/50 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
                     >
-                        <p className="text-sm text-red-600 font-bold mb-1 flex items-center justify-between">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-bold mb-1 flex items-center justify-between">
                             Sin Stock <AlertCircle size={14} />
                         </p>
-                        <p className="text-2xl font-bold text-red-700">{dashData.alertas.sin_stock?.count || 0}</p>
+                        <p className="text-2xl font-bold text-red-700 dark:text-red-300">{dashData.alertas.sin_stock?.count || 0}</p>
                     </div>
 
                     <div
@@ -563,12 +594,12 @@ export default function Dashboard() {
                             color: 'yellow',
                             icon: <AlertTriangle size={24} className="text-yellow-600" />
                         })}
-                        className="p-4 bg-yellow-50 rounded-xl border border-yellow-100 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
+                        className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-100 dark:border-yellow-900/50 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
                     >
-                        <p className="text-sm text-yellow-600 font-bold mb-1 flex items-center justify-between">
+                        <p className="text-sm text-yellow-600 dark:text-yellow-400 font-bold mb-1 flex items-center justify-between">
                             Sin Movimiento <AlertCircle size={14} />
                         </p>
-                        <p className="text-2xl font-bold text-yellow-700">{dashData.alertas.sin_movimiento?.count || 0}</p>
+                        <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{dashData.alertas.sin_movimiento?.count || 0}</p>
                     </div>
 
                     <div
@@ -579,12 +610,12 @@ export default function Dashboard() {
                             color: 'blue',
                             icon: <DollarSign size={24} className="text-blue-600" />
                         })}
-                        className="p-4 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
+                        className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900/50 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
                     >
-                        <p className="text-sm text-blue-600 font-bold mb-1 flex items-center justify-between">
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-bold mb-1 flex items-center justify-between">
                             Compras Grandes <AlertCircle size={14} />
                         </p>
-                        <p className="text-2xl font-bold text-blue-700">{dashData.alertas.compras_grandes?.count || 0}</p>
+                        <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{dashData.alertas.compras_grandes?.count || 0}</p>
                     </div>
 
                     <div
@@ -595,12 +626,12 @@ export default function Dashboard() {
                             color: 'purple',
                             icon: <Activity size={24} className="text-purple-600" />
                         })}
-                        className="p-4 bg-purple-50 rounded-xl border border-purple-100 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
+                        className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-900/50 cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] active:scale-95"
                     >
-                        <p className="text-sm text-purple-600 font-bold mb-1 flex items-center justify-between">
+                        <p className="text-sm text-purple-600 dark:text-purple-400 font-bold mb-1 flex items-center justify-between">
                             Posibles Duplicados <AlertCircle size={14} />
                         </p>
-                        <p className="text-2xl font-bold text-purple-700">{dashData.alertas.facturas_duplicadas?.count || 0}</p>
+                        <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{dashData.alertas.facturas_duplicadas?.count || 0}</p>
                     </div>
                 </div>
             </div>
