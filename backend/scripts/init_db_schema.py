@@ -1,16 +1,31 @@
 import sqlite3
 import os
 import sys
+import subprocess
 
 def init_db(db_path):
+    # Asegurar que el directorio de la base de datos exista
+    db_dir = os.path.dirname(db_path)
+    if db_dir and not os.path.exists(db_dir):
+        print(f"Creando directorio: {db_dir}")
+        os.makedirs(db_dir)
+
     if os.path.exists(db_path):
-        print(f"Warning: Database already exists at {db_path}")
-        # Optional: os.remove(db_path) or return
+        print(f"Aviso: La base de datos ya existe en {db_path}")
+        confirm = input("¿Deseas sobrescribir la base de datos existente? (s/n): ").lower()
+        if confirm != 's':
+            print("Operación cancelada.")
+            return
+        try:
+            os.remove(db_path)
+        except Exception as e:
+            print(f"Error al eliminar la base de datos existente: {e}")
+            return
     
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    print("Creating tables...")
+    print("Creando tablas...")
     try:
         cursor.execute('''CREATE TABLE almacenes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180,15 +195,36 @@ def init_db(db_path):
             , username_hash TEXT, username_encrypted TEXT)''')
 
         conn.commit()
-        print("Database schema initialized successfully.")
+        print("Schema de base de datos inicializado con éxito.")
+        
+        # Preguntar por datos de prueba
+        confirm_seed = input("¿Deseas cargar datos de prueba iniciales? (s/n): ").lower()
+        if confirm_seed == 's':
+            scripts_dir = os.path.dirname(os.path.abspath(__file__))
+            seed_script = os.path.join(scripts_dir, "seed_data_v2.py")
+            if os.path.exists(seed_script):
+                print("Ejecutando carga de datos de prueba...")
+                # Usar el mismo ejecutable de python actual
+                subprocess.run([sys.executable, seed_script], check=True)
+            else:
+                print(f"Error: No se encontró el script de semillas en {seed_script}")
+
     except Exception as e:
-        print(f"Error creating schema: {{e}}")
+        print(f"Error creando el schema: {e}")
         conn.rollback()
     finally:
         conn.close()
 
 if __name__ == "__main__":
+    # Definir ruta por defecto
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    default_db_path = os.path.join(project_root, "data", "gestion_basica.db")
+
     if len(sys.argv) < 2:
-        print("Usage: python init_db_schema.py <path_to_new_db.db>")
+        print(f"Usando ruta por defecto: {default_db_path}")
+        db_path = default_db_path
     else:
-        init_db(sys.argv[1])
+        db_path = sys.argv[1]
+    
+    init_db(db_path)

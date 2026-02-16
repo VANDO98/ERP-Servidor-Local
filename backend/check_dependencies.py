@@ -3,11 +3,9 @@ import subprocess
 try:
     from importlib.metadata import distributions
 except ImportError:
-    # Fallback for older python < 3.8, though project requires 3.10+
     try:
         from importlib_metadata import distributions
     except ImportError:
-        # Last resort: try pkg_resources
         import pkg_resources
         def distributions():
             return pkg_resources.working_set
@@ -29,10 +27,6 @@ REQUIRED_PACKAGES = [
 
 def check_and_install():
     try:
-        # Get installed packages (normalized names)
-        # Note: distributions() returns objects with .metadata attribute
-        # We handle both importlib.metadata and pkg_resources styles if mixed, 
-        # but importlib.metadata is standard in 3.10+
         if 'pkg_resources' in sys.modules and distributions == pkg_resources.working_set:
              installed = {pkg.key.lower() for pkg in distributions()}
         else:
@@ -43,7 +37,6 @@ def check_and_install():
         print("Intentando instalacion forzada de requirements...")
         installed = set()
 
-    # Check missing (simple check)
     missing = [pkg for pkg in REQUIRED_PACKAGES if pkg.lower() not in installed]
 
     if missing:
