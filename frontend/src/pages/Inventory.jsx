@@ -29,10 +29,10 @@ export default function Inventory() {
         fetchWarehouses()
     }, [])
 
+
     const fetchWarehouses = async () => {
         try {
-            const res = await fetch('http://localhost:8000/api/warehouses')
-            const data = await res.json()
+            const data = await api.getWarehouses()
             setWarehouses(data)
         } catch (error) {
             console.error('Error fetching warehouses:', error)
@@ -65,18 +65,14 @@ export default function Inventory() {
 
     const fetchKardex = async () => {
         try {
-            let url = ''
-            if (kardexType === 'general') {
-                url = `http://localhost:8000/api/inventory/kardex/general?start_date=${startDate}&end_date=${endDate}`
-            } else if (selectedProduct) {
-                url = `http://localhost:8000/api/inventory/kardex/${selectedProduct}?start_date=${startDate}&end_date=${endDate}`
-            } else {
-                return
+            if (kardexType === 'general' || selectedProduct) {
+                const data = await api.getKardex(kardexType, {
+                    startDate,
+                    endDate,
+                    productId: selectedProduct
+                })
+                setKardexData(data)
             }
-
-            const response = await fetch(url)
-            const data = await response.json()
-            setKardexData(data)
         } catch (error) {
             console.error('Error fetching kardex:', error)
         }

@@ -26,7 +26,7 @@ export default function Movements() {
     useEffect(() => {
         Promise.all([
             api.getProducts(),
-            fetch('http://localhost:8000/api/warehouses').then(r => r.json())
+            api.getWarehouses()
         ]).then(([prods, whs]) => {
             setProducts(prods)
             setWarehouses(whs)

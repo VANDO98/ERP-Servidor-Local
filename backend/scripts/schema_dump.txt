@@ -1,0 +1,168 @@
+
+TABLE: proveedores
+  - id (INTEGER)
+  - ruc_dni (TEXT)
+  - razon_social (TEXT)
+  - direccion (TEXT)
+  - telefono (TEXT)
+  - email (TEXT)
+  - categoria (TEXT)
+
+TABLE: sqlite_sequence
+  - name ()
+  - seq ()
+
+TABLE: productos
+  - id (INTEGER)
+  - codigo_sku (TEXT)
+  - nombre (TEXT)
+  - unidad_medida (TEXT)
+  - categoria (TEXT)
+  - stock_actual (REAL)
+  - costo_promedio (REAL)
+  - precio_venta (REAL)
+  - categoria_id (INTEGER)
+  - stock_minimo (REAL)
+
+TABLE: compras_cabecera
+  - id (INTEGER)
+  - proveedor_id (INTEGER)
+  - fecha_emision (DATE)
+  - tipo_documento (TEXT)
+  - serie (TEXT)
+  - numero (TEXT)
+  - moneda (TEXT)
+  - total_gravada (REAL)
+  - total_igv (REAL)
+  - total_compra (REAL)
+  - fecha_registro (TIMESTAMP)
+  - tipo_cambio (REAL)
+  - orden_compra_id (INTEGER)
+
+TABLE: compras_detalle
+  - id (INTEGER)
+  - compra_id (INTEGER)
+  - producto_id (INTEGER)
+  - descripcion (TEXT)
+  - cantidad (REAL)
+  - precio_unitario (REAL)
+  - subtotal (REAL)
+  - unidad_medida (TEXT)
+  - costo_previo (REAL)
+  - tasa_impuesto (REAL)
+  - almacen_id (INTEGER)
+
+TABLE: categorias
+  - id (INTEGER)
+  - nombre (TEXT)
+
+TABLE: almacenes
+  - id (INTEGER)
+  - nombre (TEXT)
+  - ubicacion (TEXT)
+
+TABLE: stock_almacen
+  - id (INTEGER)
+  - producto_id (INTEGER)
+  - almacen_id (INTEGER)
+  - stock_actual (REAL)
+
+TABLE: ordenes_compra
+  - id (INTEGER)
+  - proveedor_id (INTEGER)
+  - fecha_emision (DATE)
+  - fecha_entrega_est (DATE)
+  - estado (TEXT)
+  - moneda (TEXT)
+  - observaciones (TEXT)
+  - total_orden (REAL)
+  - tasa_igv (REAL)
+  - direccion_entrega (TEXT)
+
+TABLE: ordenes_compra_det
+  - id (INTEGER)
+  - oc_id (INTEGER)
+  - producto_id (INTEGER)
+  - cantidad_solicitada (REAL)
+  - cantidad_recibida (REAL)
+  - precio_unitario_pactado (REAL)
+
+TABLE: guias_remision
+  - id (INTEGER)
+  - proveedor_id (INTEGER)
+  - oc_id (INTEGER)
+  - numero_guia (TEXT)
+  - fecha_recepcion (DATE)
+
+TABLE: guias_remision_det
+  - id (INTEGER)
+  - guia_id (INTEGER)
+  - producto_id (INTEGER)
+  - cantidad_recibida (REAL)
+  - almacen_destino_id (INTEGER)
+
+TABLE: factura_guia_rel
+  - factura_id (INTEGER)
+  - guia_id (INTEGER)
+
+TABLE: salidas_cabecera
+  - id (INTEGER)
+  - fecha (DATE)
+  - tipo_salida (TEXT)
+  - destino (TEXT)
+  - observaciones (TEXT)
+  - fecha_registro (TIMESTAMP)
+
+TABLE: salidas_detalle
+  - id (INTEGER)
+  - salida_id (INTEGER)
+  - producto_id (INTEGER)
+  - cantidad (REAL)
+  - almacen_id (INTEGER)
+  - costo_unitario (REAL)
+
+TABLE: configuracion
+  - id (INTEGER)
+  - clave (TEXT)
+  - valor (TEXT)
+  - descripcion (TEXT)
+  - fecha_modificacion (TIMESTAMP)
+
+TABLE: tipo_cambio
+  - fecha (TEXT)
+  - venta (REAL)
+  - compra (REAL)
+  - origen (TEXT)
+
+TABLE: traslados_cabecera
+  - id (INTEGER)
+  - fecha (DATE)
+  - origen_id (INTEGER)
+  - destino_id (INTEGER)
+  - observaciones (TEXT)
+  - fecha_registro (DATETIME)
+  - estado (TEXT)
+
+TABLE: traslados_detalle
+  - id (INTEGER)
+  - traslado_id (INTEGER)
+  - producto_id (INTEGER)
+  - cantidad (REAL)
+  - costo_unitario (REAL)
+
+TABLE: ordenes_compra_detalle
+  - id (INTEGER)
+  - orden_id (INTEGER)
+  - producto_id (INTEGER)
+  - cantidad (REAL)
+  - precio_unitario (REAL)
+
+TABLE: users
+  - id (INTEGER)
+  - username (TEXT)
+  - password_hash (TEXT)
+  - role (TEXT)
+  - is_active (BOOLEAN)
+  - created_at (DATETIME)
+  - username_hash (TEXT)
+  - username_encrypted (TEXT)

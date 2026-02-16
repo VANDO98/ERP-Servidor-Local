@@ -60,8 +60,7 @@ export default function DeliveryGuides() {
     const fetchGuides = async () => {
         setLoading(true)
         try {
-            const res = await fetch('http://localhost:8000/api/guides')
-            const data = await res.json()
+            const data = await api.getGuides()
             console.log("Guides loaded:", data)
             setGuides(Array.isArray(data) ? data : [])
         } catch (error) {
@@ -75,9 +74,7 @@ export default function DeliveryGuides() {
     const fetchApprovedOrders = async () => {
         try {
             console.log("Fetching pending orders...")
-            const res = await fetch('http://localhost:8000/api/orders/pending')
-            if (!res.ok) throw new Error("Error fetching orders")
-            const data = await res.json()
+            const data = await api.getPendingOrders()
             console.log("Pending orders loaded:", data)
             setOrders(Array.isArray(data) ? data : [])
         } catch (error) {
@@ -104,10 +101,7 @@ export default function DeliveryGuides() {
 
         try {
             // Fetch OC Details AND Balance via new endpoint
-            const res = await fetch(`http://localhost:8000/api/orders/${oid}/balance`)
-            if (!res.ok) throw new Error("Error al obtener saldo de OC")
-
-            const data = await res.json()
+            const data = await api.getOrderBalance(oid)
 
             if (data.fully_completed) {
                 alert("Esta Orden de Compra ya ha sido entregada en su totalidad.")
@@ -195,15 +189,7 @@ export default function DeliveryGuides() {
                 throw new Error("Debe ingresar al menos una cantidad válida mayor a 0")
             }
 
-            const res = await fetch('http://localhost:8000/api/guides', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-
-            const result = await res.json()
-
-            if (!res.ok) throw new Error(result.detail || 'Error al guardar')
+            const result = await api.createGuide(payload)
 
             alert("Guía registrada correctamente")
             fetchGuides()
@@ -228,9 +214,7 @@ export default function DeliveryGuides() {
 
     const handleViewDetail = async (gid) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/guides/${gid}`)
-            if (!res.ok) throw new Error("Error loading guide")
-            const data = await res.json()
+            const data = await api.getGuide(gid)
             setSelectedGuide(data)
         } catch (error) {
             console.error(error)

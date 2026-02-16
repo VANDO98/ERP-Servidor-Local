@@ -1,3 +1,4 @@
+
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -8,18 +9,15 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
-# Configuración
+# Configuration (Should ideally be in .env)
 SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion-12345"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# Fernet Key for Username Encryption (Should be Env Var in Prod)
-# Generated for this implementation
+ACCESS_TOKEN_EXPIRE_MINUTES = 30 # Can be imported by main.py
 FERNET_KEY = b'Z7qJqU4y7r7w-2n3b4c5d6e7f8g9h0i1j2k3l4m5n6o=' 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
-# Modelos
+# Models for Token
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -45,26 +43,25 @@ def decrypt_username(encrypted_username: str) -> str:
     except Exception:
         return "[Error Decrypting]"
 
-# Funciones de hashing usando bcrypt directamente
+# Hashing Functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica si la contraseña coincide con el hash usando bcrypt"""
+    """Verifies password against hash using bcrypt"""
     try:
-        # Truncar a 72 bytes si es necesario
         plain_bytes = plain_password.encode('utf-8')[:72]
         hash_bytes = hashed_password.encode('utf-8')
         return bcrypt.checkpw(plain_bytes, hash_bytes)
     except Exception as e:
-        print(f"Error verificando password: {e}")
+        print(f"Error verifying password: {e}")
         return False
 
 def get_password_hash(password: str) -> str:
-    """Genera un hash bcrypt de la contraseña"""
-    # Truncar a 72 bytes si es necesario
+    """Generates bcrypt hash of password"""
     password_bytes = password.encode('utf-8')[:72]
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password_bytes, salt)
     return hashed.decode('utf-8')
 
+# JWT Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -76,8 +73,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Dependency to get current user from token"""
     credentials_exception = HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -90,9 +88,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     
-    from src.backend import obtener_usuario_por_username
-    # username in token might be hash or plain (legacy)
-    user = obtener_usuario_por_username(token_data.username)
+    # Import here to avoid circular dependency if possible, or use a service
+    # Ideally should call a service function, but we can do a direct DB call via service
+    # to avoid importing the whole monolith.
+    from src.auth.service import obtener_usuario_por_username_internal
+    
+    user = obtener_usuario_por_username_internal(token_data.username)
     
     if user is None:
         raise credentials_exception

@@ -76,9 +76,10 @@ export default function Orders() {
 
     const handleEdit = async (orderId) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/orders/${orderId}`)
-            if (!res.ok) throw new Error('Error al obtener orden')
-            const data = await res.json()
+            const response = await api.getOrder(orderId)
+            // Backend returns { header: {...}, items: [...] } or just flat object?
+            // Based on service.py it returns { header: ..., items: ... }
+            const data = response.header ? { ...response.header, items: response.items } : response;
 
             setFormData({
                 id: data.id,
@@ -88,26 +89,30 @@ export default function Orders() {
                 direccion_entrega: data.direccion_entrega || (companyConfig?.company?.address || ''),
                 moneda: data.moneda,
                 items: data.items.map(i => ({
-                    pid: i.pid,
+                    pid: i.producto_id || i.pid, // Handle potential key diffs
                     cantidad: i.cantidad,
-                    precio_unitario: i.precio_unitario,
+                    precio_unitario: i.precio_unitario || i.precio_unitario_pactado,
                     um: i.um
                 }))
             })
             setView('create')
         } catch (error) {
+            console.error(error)
             alert(error.message)
         }
     }
 
     const handleViewDetail = async (orderId) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/orders/${orderId}`)
-            if (!res.ok) throw new Error('Error al obtener orden')
-            const data = await res.json()
+            const response = await api.getOrder(orderId)
+            // Flatten logic
+            const data = response.header ? { ...response.header, items: response.items } : response;
+
+            console.log("Order Detail Data:", data) // Debug
             setSelectedOrder(data)
             setView('detail')
         } catch (error) {
+            console.error(error)
             alert(error.message)
         }
     }
@@ -118,8 +123,16 @@ export default function Orders() {
 
     const handlePrint = async (orderId) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/orders/${orderId}`)
-            const data = await res.json()
+            const response = await api.getOrder(orderId)
+            const data = response.header ? { ...response.header, items: response.items } : response;
+
+            // Calculate total if missing or 0 (fallback)
+            // Handle cases like "0.00", 0, null, undefined
+            const currentTotal = parseFloat(data.total || 0);
+            if (currentTotal === 0) {
+                const calculated = data.items.reduce((sum, item) => sum + (Number(item.cantidad) * Number(item.precio_unitario)), 0);
+                if (calculated > 0) data.total = calculated;
+            }
 
             // Default config if not loaded
             const config = companyConfig || {
@@ -324,34 +337,21 @@ export default function Orders() {
 
         setLoading(true)
         try {
-            let res
+            let data
             if (formData.id) {
                 // Update
-                res = await fetch(`http://localhost:8000/api/orders/${formData.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                })
+                data = await api.updateOrder(formData.id, formData)
+                alert('Orden actualizada')
             } else {
                 // Create
-                res = await fetch('http://localhost:8000/api/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                })
+                data = await api.createOrder(formData)
+                alert(`Orden creada: ${data.correlativo}`)
             }
 
-            const data = await res.json()
-
-            if (res.ok) {
-                alert(formData.id ? 'Orden actualizada' : `Orden creada: ${data.correlativo}`)
-                setView('list')
-                fetchAllData()
-            } else {
-                alert(data.detail || 'Error al guardar')
-            }
+            setView('list')
+            fetchAllData()
         } catch (error) {
-            alert(`Error de conexión: ${error.message}`)
+            alert(`Error: ${error.message}`)
         } finally {
             setLoading(false)
         }
@@ -423,7 +423,10 @@ export default function Orders() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center space-x-2">
-                                                <button onClick={() => handleViewDetail(order.id)} className="p-1 text-slate-400 hover:text-slate-600" title="Ver Detalle">
+                                                <button onClick={() => {
+                                                    if (!order.id) console.error("Missing ID for order:", order);
+                                                    handleViewDetail(order.id)
+                                                }} className="p-1 text-slate-400 hover:text-slate-600" title="Ver Detalle">
                                                     <Eye size={16} />
                                                 </button>
                                                 {order.estado === 'PENDIENTE' && (
@@ -703,7 +706,10 @@ export default function Orders() {
                                 </button>
                             )}
                             <button
-                                onClick={() => handlePrint(selectedOrder.id)}
+                                onClick={() => {
+                                    if (selectedOrder && selectedOrder.id) handlePrint(selectedOrder.id);
+                                    else alert("Error: ID de orden no encontrado");
+                                }}
                                 className="px-6 py-2.5 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-lg shadow-slate-200"
                             >
                                 <Printer size={18} /> Imprimir / Descargar PDF

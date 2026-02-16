@@ -1,0 +1,195 @@
+Obtaining Token...
+✅ Token obtained
+
+--- DASHBOARD (http://localhost:8000/api/dashboard/complete?start_date=2024-01-01&end_date=2025-12-31) ---
+KEYS: dict_keys(['kpis', 'top_providers', 'categories', 'evolution', 'stock_critico', 'rotacion', 'alertas'])
+Sample stock_critico[0]: {
+  "Producto": "Gloss rojo",
+  "Stock": 0.0,
+  "UM": "LITRO",
+  "StockMinimo": 10.0,
+  "Estado": "Sin Stock"
+}
+Sample top_providers[0]: {
+  "Proveedor": "SODIMAC PERU S.A.",
+  "Monto": 107036.42956
+}
+Sample alertas: {
+  "sin_stock": {
+    "count": 3,
+    "items": [
+      {
+        "nombre": "Gloss rojo",
+        "stock": 0.0,
+        "min": 10.0,
+        "um": "LITRO"
+      },
+      {
+        "nombre": "Product Debug",
+        "stock": 0.0,
+        "min": 10.0,
+        "um": "UND"
+      },
+      {
+        "nombre": "Product Balance",
+        "stock": 0.0,
+        "min": 10.0,
+        "um": "UND"
+      }
+    ]
+  },
+  "sin_movimiento": {
+    "count": 14,
+    "items": [
+      {
+        "nombre": "CEMENTO SOL TIPO I",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "LADRILLO KING KONG 18 HUECOS",
+        "ultimo_movimiento": "2025-09-03"
+      },
+      {
+        "nombre": "VARILLA FIERRO CORRUGADO 1/2",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "BROCHA CERDA FINA 4 PULG",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "MARTILLO CARPINTERO STANLEY",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "DESTORNILLADOR PHILIPS 6X100",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "CASCO SEGURIDAD AMARILLO",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "LENTES SEGURIDAD TRANSPARENTE",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "PAPEL BOND A4 75GR",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "CABLE ELECTRICO 12AWG (ROLLO 100M)",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "INTERRUPTOR DOBLE EMPOTRABLE",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "TUBO PVC AGUA 1/2 PULG",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "Producto Test",
+        "ultimo_movimiento": "Nunca"
+      },
+      {
+        "nombre": "Product Guide",
+        "ultimo_movimiento": "Nunca"
+      }
+    ]
+  },
+  "compras_grandes": {
+    "count": 2,
+    "items": [
+      {
+        "documento": "FFA1-123456",
+        "proveedor": "ACEROS AREQUIPA S.A.",
+        "fecha": "2026-02-10",
+        "monto": 75000.0
+      },
+      {
+        "documento": "-",
+        "proveedor": "SODIMAC PERU S.A.",
+        "fecha": "2026-02-11",
+        "monto": 11000.0
+      }
+    ]
+  },
+  "facturas_duplicadas": {
+    "count": 1,
+    "items": [
+      {
+        "proveedor": "ACEROS AREQUIPA S.A.",
+        "fecha": "2026-02-10",
+        "monto": 25.0,
+        "cantidad": 2
+      }
+    ]
+  }
+}
+
+--- PRODUCTS (http://localhost:8000/api/products) ---
+Count: 23
+Sample Item: {
+  "id": 1,
+  "nombre": "CEMENTO SOL TIPO I",
+  "codigo_sku": "CEMENTO-SOL",
+  "categoria_nombre": "Materiales de Construcci\u00f3n",
+  "unidad_medida": "BOLSA",
+  "stock_actual": 704.0,
+  "stock_minimo": 10.0,
+  "costo_promedio": 29.29604292273814,
+  "precio_venta": 32.0
+}
+
+--- INV DETAILED (http://localhost:8000/api/inventory/detailed) ---
+Count: 25
+Sample Item: {
+  "Producto": "ALICATE UNIVERSAL 8 PULG",
+  "Codigo": "ALICATE-UNIV",
+  "Almacen": "Almac\u00e9n Principal",
+  "Stock": 10.0,
+  "CostoUnitFIFO": 27.25576960907743,
+  "ValorTotal": 272.5576960907743
+}
+
+--- ORDERS (http://localhost:8000/api/orders) ---
+Count: 16
+Sample Item: {
+  "id": 18,
+  "proveedor_nombre": "PROMART HOMECENTER",
+  "fecha": "2026-02-15",
+  "fecha_entrega_est": "2026-02-15",
+  "moneda": "PEN",
+  "estado": "PENDIENTE",
+  "Items": 1,
+  "total": 543.25
+}
+
+--- GUIDES (http://localhost:8000/api/guides) ---
+Count: 11
+Sample Item: {
+  "id": 2,
+  "numero_guia": "010-15",
+  "fecha": "2026-02-15",
+  "proveedor_nombre": "",
+  "oc_id": 8,
+  "documento_ref": "OC-8",
+  "items_count": 1
+}
+
+--- PURCHASES DETAILED (http://localhost:8000/api/purchases/detailed) ---
+Count: 616
+Sample Item: {
+  "fecha": "2026-02-15",
+  "proveedor": "ACEROS AREQUIPA S.A.",
+  "serie": "fff1",
+  "numero": "1561",
+  "producto": "CEMENTO SOL TIPO I",
+  "cantidad": 10.0,
+  "um": "BOLSA",
+  "precio_unitario": 29.29,
+  "subtotal": 292.9,
+  "moneda": "PEN"
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Calendar, TrendingUp, Package, AlertTriangle, DollarSign, ShoppingCart, Activity, AlertCircle, BarChart2 } from 'lucide-react'
+import { api } from '../services/api'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
@@ -44,15 +45,17 @@ export default function Dashboard() {
         }
     }
 
+    const [error, setError] = useState(null)
+
     const fetchData = async () => {
         setLoading(true)
+        setError(null)
         try {
-            const res = await fetch(`http://localhost:8000/api/dashboard/complete?start_date=${startDate}&end_date=${endDate}`)
-            if (!res.ok) throw new Error('Error en respuesta del servidor')
-            const data = await res.json()
+            const data = await api.getDashboardMetrics(startDate, endDate)
             setDashData(data)
         } catch (error) {
             console.error('Error fetching dashboard:', error)
+            setError(error.message)
         } finally {
             setLoading(false)
         }
@@ -163,6 +166,17 @@ export default function Dashboard() {
                         </button>
                     </div>
                 </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-96 text-red-500">
+                <AlertCircle size={48} className="mb-4" />
+                <p className="font-bold">Error cargando dashboard</p>
+                <p className="text-sm mt-2">{error}</p>
+                <button onClick={fetchData} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Reintentar</button>
             </div>
         )
     }

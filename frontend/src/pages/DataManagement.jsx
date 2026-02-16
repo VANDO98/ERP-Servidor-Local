@@ -64,21 +64,16 @@ export default function DataManagement() {
             }
 
             const endpoint = endpoints[uploadType]
-            const res = await fetch(`http://localhost:8000/api/${endpoint}${uploadType === 'initial_stock' ? `?almacen_id=${selectedWarehouse}` : ''}`, {
-                method: 'POST',
-                body: formData
-            })
+            const queryString = uploadType === 'initial_stock' ? `?almacen_id=${selectedWarehouse}` : ''
 
-            const data = await res.json()
-            if (res.ok) {
-                setMessage({ type: 'success', text: data.msg || 'Carga exitosa' })
-                setFile(null)
-                setShowWarning(false)
-            } else {
-                setMessage({ type: 'error', text: data.detail || 'Error en la carga' })
-            }
+            const data = await api.uploadData(`${endpoint}${queryString}`, formData)
+
+            setMessage({ type: 'success', text: data.msg || 'Carga exitosa' })
+            setFile(null)
+            setShowWarning(false)
+
         } catch (error) {
-            setMessage({ type: 'error', text: 'Error de conexión: ' + error.message })
+            setMessage({ type: 'error', text: error.message })
         } finally {
             setUploading(false)
         }

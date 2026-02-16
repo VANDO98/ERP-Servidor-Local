@@ -37,12 +37,13 @@ export default function Purchase() {
     const [guides, setGuides] = useState([]) // Available guides
     const [selectedGuideId, setSelectedGuideId] = useState('')
 
+
     const loadInitialData = () => {
         Promise.all([
             api.getProducts(),
             api.getGuides(), // Fetch guides
             api.getProviders(),
-            fetch('http://localhost:8000/api/warehouses').then(r => r.json())
+            api.getWarehouses()
         ]).then(([prods, guidesData, provs, whs]) => {
             setProducts(prods)
             setGuides(guidesData) // Set guides
@@ -52,7 +53,7 @@ export default function Purchase() {
     }
 
     useEffect(() => {
-        
+
         loadInitialData()
     }, [])
 
@@ -80,17 +81,13 @@ export default function Purchase() {
     // New: Load Data safely merging OC Header + Guide Items
     const loadInvoiceFromGuide = async (gid, oid) => {
         setLoading(true)
+
         try {
             // 1. Fetch both in parallel
-            const [resOc, resGuide] = await Promise.all([
-                fetch(`http://localhost:8000/api/orders/${oid}`),
-                fetch(`http://localhost:8000/api/guides/${gid}`)
+            const [ocData, guideData] = await Promise.all([
+                api.getOrder(oid),
+                api.getGuide(gid)
             ])
-
-            if (!resOc.ok) throw new Error("Error cargando OC")
-
-            const ocData = await resOc.json()
-            const guideData = await resGuide.json()
 
             // 2. Prepare items from GUIDE (received quantities)
             // Note: Guide items might not have price, so we try to match with OC items to get price
@@ -179,8 +176,7 @@ export default function Purchase() {
         }
 
         try {
-            const res = await fetch(`http://localhost:8000/api/guides/${gid}`)
-            const data = await res.json()
+            const data = await api.getGuide(gid)
 
             const newItems = data.items.map(i => ({
                 pid: i.producto_id,
