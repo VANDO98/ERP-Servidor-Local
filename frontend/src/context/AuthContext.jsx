@@ -86,14 +86,14 @@ export const AuthProvider = ({ children }) => {
         setShowSessionModal(false);
         resetIdleTimer();
         // Optional: Ping server to check token validity
-        axios.get('http://localhost:8000/api/users/me').catch(() => logout());
+        axios.get('/api/users/me').catch(() => logout());
     };
 
     useEffect(() => {
         const initAuth = async () => {
             if (token) {
                 try {
-                    axios.get('http://localhost:8000/api/users/me')
+                    axios.get('/api/users/me')
                         .then(res => setUser(res.data))
                         .catch(err => {
                             console.error("Token verification failed", err);
@@ -115,14 +115,14 @@ export const AuthProvider = ({ children }) => {
         formData.append('password', password);
 
         try {
-            const response = await axios.post('http://localhost:8000/api/token', formData);
+            const response = await axios.post('/api/token', formData);
             const accessToken = response.data.access_token;
 
             localStorage.setItem('token', accessToken);
             setToken(accessToken);
             axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-            const userRes = await axios.get('http://localhost:8000/api/users/me');
+            const userRes = await axios.get('/api/users/me');
             setUser(userRes.data);
 
             return { success: true };

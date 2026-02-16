@@ -17,7 +17,7 @@ export default function ModalWarehouse({ isOpen, onClose, onWarehouseSaved }) {
         try {
             if (!formData.nombre) throw new Error("El nombre es obligatorio")
 
-            const res = await fetch('http://localhost:8000/api/warehouses', {
+            const res = await fetch('/api/warehouses', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

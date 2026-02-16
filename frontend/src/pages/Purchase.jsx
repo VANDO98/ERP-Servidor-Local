@@ -70,7 +70,42 @@ export default function Purchase() {
         }
     }, [view])
 
-    // ... (keep useEffect for location.search)
+    // Load Data from OC (navigated from Orders)
+    useEffect(() => {
+        if (location.state?.ocId) {
+            loadOcData(location.state.ocId)
+        }
+    }, [location.state])
+
+    const loadOcData = async (oid) => {
+        setLoading(true)
+        try {
+            const data = await api.getOrder(oid)
+            const order = data.header ? { ...data.header, items: data.items } : data;
+
+            setFormData(prev => ({
+                ...prev,
+                proveedor_id: order.proveedor_id,
+                fecha: new Date().toISOString().split('T')[0],
+                moneda: order.moneda,
+                tasa_igv: order.tasa_igv || 18,
+                orden_compra_id: oid,
+                observaciones: `Facturación de OC-${String(oid).padStart(6, '0')}`,
+                items: (order.items || []).map(i => ({
+                    pid: i.producto_id || i.pid,
+                    cantidad: i.cantidad,
+                    precio_unitario: i.precio_unitario || 0,
+                    um: i.um || 'UN'
+                }))
+            }))
+            setSuccessMsg(`Datos cargados de OC-${String(oid).padStart(6, '0')}`)
+        } catch (error) {
+            console.error(error)
+            setErrorMsg("Error al cargar OC: " + error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     // ... (keep loadInvoiceFromGuide and loadOcData)
 
@@ -83,43 +118,41 @@ export default function Purchase() {
         setLoading(true)
 
         try {
-            // 1. Fetch both in parallel
             const [ocData, guideData] = await Promise.all([
                 api.getOrder(oid),
                 api.getGuide(gid)
             ])
 
-            // 2. Prepare items from GUIDE (received quantities)
-            // Note: Guide items might not have price, so we try to match with OC items to get price
-            const mergedItems = guideData.items.map(gItem => {
-                // Find matching item in OC to get requested price
-                // Match by Product ID
-                const ocItem = ocData.items.find(oItem => oItem.pid === gItem.producto_id)
-                const price = ocItem ? ocItem.precio_unitario : 0
+            const gCab = guideData.cabecera || guideData
+            const gItems = guideData.detalles || guideData.items || []
+            const orderDoc = ocData.header ? { ...ocData.header, items: ocData.items } : ocData;
+
+            const mergedItems = gItems.map(gItem => {
+                const ocItem = (orderDoc.items || []).find(oItem => (oItem.producto_id || oItem.pid) === gItem.producto_id)
+                const price = ocItem ? (ocItem.precio_unitario || ocItem.precio_unitario_pactado) : 0
 
                 return {
                     pid: gItem.producto_id,
-                    cantidad: gItem.cantidad_recibida, // Use RECEIVED quantity
+                    cantidad: gItem.cantidad_recibida,
                     precio_unitario: price,
                     um: gItem.unidad_medida || 'UN',
                     almacen_id: gItem.almacen_destino_id || 1
                 }
             })
 
-            // 3. Set Form Data: OC Header + Guide Items
             setFormData(prev => ({
                 ...prev,
-                proveedor_id: ocData.proveedor_id,
+                proveedor_id: orderDoc.proveedor_id,
                 fecha: new Date().toISOString().split('T')[0],
-                moneda: ocData.moneda,
-                tasa_igv: ocData.tasa_igv,
+                moneda: orderDoc.moneda,
+                tasa_igv: orderDoc.tasa_igv || 18,
                 orden_compra_id: oid,
                 guia_remision_id: gid,
-                observaciones: `Facturación de Guía ${guideData.numero_guia} (OC-${String(oid).padStart(6, '0')})`,
+                observaciones: `Facturación de Guía ${gCab.numero_guia} (OC-${String(oid).padStart(6, '0')})`,
                 items: mergedItems
             }))
 
-            setSuccessMsg(`Datos cargados: Guía ${guideData.numero_guia} + OC-${String(oid).padStart(6, '0')}`)
+            setSuccessMsg(`Datos cargados: Guía ${gCab.numero_guia} + OC-${String(oid).padStart(6, '0')}`)
 
         } catch (error) {
             console.error(error)
@@ -171,26 +204,34 @@ export default function Purchase() {
             return
         }
 
-        if (formData.items.length > 0 && !window.confirm("Esto reemplazará los items actuales. ¿Desea continuar?")) {
+        if (formData.items.length > 0 && !window.confirm("Esto reemplazará los items actuales. ¿Desea continuar? (Si desea facturar varias guías para una OC, límpielas primero o impórtelas una a una)")) {
             return
         }
 
         try {
             const data = await api.getGuide(gid)
+            const cab = data.cabecera || data
+            const items = data.detalles || data.items || []
 
-            const newItems = data.items.map(i => ({
-                pid: i.producto_id,
-                cantidad: i.cantidad_recibida,
-                precio_unitario: 0, // User must enter price
-                um: i.unidad_medida || 'UN'
-            }))
+            const newItems = items.map(i => {
+                // Try to find price from existing items (likely loaded from OC)
+                const existingItem = formData.items.find(ei => parseInt(ei.pid) === parseInt(i.producto_id))
+                const price = existingItem ? (existingItem.precio_unitario || 0) : 0
+
+                return {
+                    pid: i.producto_id,
+                    cantidad: i.cantidad_recibida,
+                    precio_unitario: price,
+                    um: i.unidad_medida || 'UN'
+                }
+            })
 
             setFormData({
                 ...formData,
                 items: newItems,
                 guia_remision_id: gid,
-                proveedor_id: data.proveedor_id || formData.proveedor_id, // Auto-select provider if possible
-                observaciones: (formData.observaciones || '') + ` [Ref: Guía ${data.numero_guia}]`
+                proveedor_id: cab.proveedor_id || formData.proveedor_id,
+                observaciones: (formData.observaciones || '') + ` [Ref: Guía ${cab.numero_guia}]`
             })
             setSelectedGuideId(gid)
         } catch (error) {
@@ -350,10 +391,14 @@ export default function Purchase() {
                                 >
                                     <option value="">-- Seleccionar Guía --</option>
                                     {guides
-                                        .filter(g => g.proveedor == suppliers.find(s => s.id == formData.proveedor_id)?.razon_social)
+                                        .filter(g => {
+                                            const matchesProv = g.proveedor_nombre === suppliers.find(s => s.id == formData.proveedor_id)?.razon_social;
+                                            const matchesOc = formData.orden_compra_id ? g.oc_id == formData.orden_compra_id : true;
+                                            return matchesProv && matchesOc;
+                                        })
                                         .map(g => (
                                             <option key={g.id} value={g.id}>
-                                                {g.numero_guia} | {g.fecha_recepcion} | {g.proveedor}
+                                                {g.numero_guia} | {g.fecha} | {g.proveedor_nombre} {g.oc_id ? `(OC-${g.oc_id})` : ''}
                                             </option>
                                         ))}
                                 </select>

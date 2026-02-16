@@ -44,7 +44,7 @@ cd frontend
 echo Instalando dependencias si es necesario...
 call npm install --silent
 echo Iniciando servidor de desarrollo...
-npm run dev
+npm run dev -- --host
 
 
 REM 4. Abrir Navegador

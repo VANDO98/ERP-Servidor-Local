@@ -59,7 +59,7 @@ export default function ModalProduct({ isOpen, onClose, onProductSaved }) {
                 stock_minimo: parseFloat(formData.stock_minimo || 0)
             }
 
-            const res = await fetch('http://localhost:8000/api/products', {
+            const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

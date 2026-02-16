@@ -20,7 +20,7 @@ export default function ModalProvider({ isOpen, onClose, onProviderSaved }) {
         try {
             if (!formData.razon_social) throw new Error("La Razón Social es obligatoria")
 
-            const res = await fetch('http://localhost:8000/api/providers', {
+            const res = await fetch('/api/providers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

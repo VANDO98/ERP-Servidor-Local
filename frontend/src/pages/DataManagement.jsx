@@ -80,7 +80,7 @@ export default function DataManagement() {
     }
 
     const handleDownloadTemplate = (type) => {
-        window.open(`http://localhost:8000/api/template/${type}`, '_blank')
+        window.open(`/api/template/${type}`, '_blank')
     }
 
     return (

@@ -504,7 +504,9 @@ export default function DeliveryGuides() {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transition-colors">
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-700/30">
-                            <h3 className="font-bold text-lg text-slate-800 dark:text-white">Detalle de Guía {selectedGuide.numero_guia}</h3>
+                            <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                                Detalle de Guía {selectedGuide.cabecera?.numero_guia || selectedGuide.numero_guia}
+                            </h3>
                             <button onClick={() => setSelectedGuide(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                 <FileText size={20} />
                             </button>
@@ -513,20 +515,27 @@ export default function DeliveryGuides() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-slate-500 dark:text-slate-400">Proveedor</p>
-                                    <p className="font-medium text-slate-800 dark:text-white">{selectedGuide.proveedor_nombre || selectedGuide.proveedor}</p>
+                                    <p className="font-medium text-slate-800 dark:text-white">
+                                        {selectedGuide.cabecera?.razon_social || selectedGuide.proveedor_nombre || selectedGuide.proveedor}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500 dark:text-slate-400">Fecha Recepción</p>
-                                    <p className="font-medium text-slate-800 dark:text-white">{selectedGuide.fecha || selectedGuide.fecha_recepcion}</p>
+                                    <p className="font-medium text-slate-800 dark:text-white">
+                                        {selectedGuide.cabecera?.fecha_recepcion || selectedGuide.fecha || selectedGuide.fecha_recepcion}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500">Orden de Compra</p>
                                     <p className="font-medium text-blue-600">
-                                        {(selectedGuide.oc_id || selectedGuide.orden_compra_id) ? (
-                                            <a href={`/purchase?ocId=${selectedGuide.oc_id || selectedGuide.orden_compra_id}&guideId=${selectedGuide.id}`} className="hover:underline flex items-center gap-1">
-                                                OC-{String(selectedGuide.oc_id || selectedGuide.orden_compra_id).padStart(6, '0')} <Truck size={14} />
-                                            </a>
-                                        ) : '-'}
+                                        {(() => {
+                                            const ocId = selectedGuide.cabecera?.oc_id || selectedGuide.oc_id || selectedGuide.orden_compra_id;
+                                            return ocId ? (
+                                                <a href={`/purchase?ocId=${ocId}&guideId=${selectedGuide.id}`} className="hover:underline flex items-center gap-1">
+                                                    OC-{String(ocId).padStart(6, '0')} <Truck size={14} />
+                                                </a>
+                                            ) : '-';
+                                        })()}
                                     </p>
                                 </div>
                             </div>
@@ -541,7 +550,7 @@ export default function DeliveryGuides() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                        {selectedGuide.items?.map((item, idx) => (
+                                        {(selectedGuide.detalles || selectedGuide.items || []).map((item, idx) => (
                                             <tr key={idx} className="dark:text-slate-200">
                                                 <td className="px-4 py-2">{item.producto}</td>
                                                 <td className="px-4 py-2 text-center text-slate-500 dark:text-slate-400">{item.unidad_medida || item.um}</td>

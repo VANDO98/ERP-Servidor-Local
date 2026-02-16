@@ -17,7 +17,7 @@ export default function ModalCategory({ isOpen, onClose, onCategorySaved }) {
         try {
             if (!formData.nombre) throw new Error("El nombre es obligatorio")
 
-            const res = await fetch('http://localhost:8000/api/categories', {
+            const res = await fetch('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

@@ -17,7 +17,7 @@ const Users = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get('http://localhost:8000/api/users');
+            const res = await axios.get('/api/users');
             setUsers(res.data);
         } catch (error) {
             console.error(error);
@@ -30,7 +30,7 @@ const Users = () => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:8000/api/users', newUser);
+            const res = await axios.post('/api/users', newUser);
             toast.success(res.data.msg);
             setShowModal(false);
             setNewUser({ username: '', password: '', role: 'user' });
@@ -43,7 +43,7 @@ const Users = () => {
     const handleDeleteUser = async (uid) => {
         if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
         try {
-            const res = await axios.delete(`http://localhost:8000/api/users/${uid}`);
+            const res = await axios.delete(`/api/users/${uid}`);
             toast.success(res.data.msg);
             fetchUsers();
         } catch (error) {
@@ -96,16 +96,16 @@ const Users = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                ? 'bg-purple-100 text-purple-800'
-                                                : 'bg-green-100 text-green-800'
+                                            ? 'bg-purple-100 text-purple-800'
+                                            : 'bg-green-100 text-green-800'
                                             }`}>
                                             {user.role === 'admin' ? 'Administrador' : 'Usuario'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_active
-                                                ? 'bg-emerald-100 text-emerald-800'
-                                                : 'bg-red-100 text-red-800'
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : 'bg-red-100 text-red-800'
                                             }`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                                             {user.is_active ? 'Activo' : 'Inactivo'}
