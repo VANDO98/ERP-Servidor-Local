@@ -215,6 +215,86 @@ def obtener_ordenes_compra():
     finally:
         conn.close()
 
+
+def obtener_ordenes_pendientes():
+    conn = get_connection()
+    try:
+        query = """
+            SELECT 
+                oc.id, 
+                p.razon_social as proveedor_nombre, 
+                oc.fecha_emision as fecha, 
+                oc.moneda, 
+                oc.estado,
+                p.id as proveedor_id
+            FROM ordenes_compra oc
+            JOIN proveedores p ON oc.proveedor_id = p.id
+            WHERE oc.estado IN ('PENDIENTE', 'PARCIAL')
+            ORDER BY oc.id DESC
+        """
+        return pd.read_sql(query, conn)
+    finally:
+        conn.close()
+
+
+def obtener_saldo_orden(oid):
+    """
+    Calcula el saldo pendiente de una OC basándose en las Guías de Remisión registradas.
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # 1. Obtener Items de la OC
+        cursor.execute("""
+            SELECT 
+                ocd.producto_id,
+                p.nombre,
+                p.unidad_medida,
+                ocd.cantidad_solicitada
+            FROM ordenes_compra_det ocd
+            JOIN productos p ON ocd.producto_id = p.id
+            WHERE ocd.oc_id = ?
+        """, (oid,))
+        
+        rows = cursor.fetchall()
+        items = []
+        fully_completed = True
+        
+        for row in rows:
+            pid, nombre, um, solicitado = row
+            
+            # 2. Calcular lo recibido en Guías asociadas a esta OC
+            cursor.execute("""
+                SELECT COALESCE(SUM(gd.cantidad_recibida), 0)
+                FROM guias_remision_det gd
+                JOIN guias_remision g ON gd.guia_id = g.id
+                WHERE g.oc_id = ? AND gd.producto_id = ?
+            """, (oid, pid))
+            
+            recibido = cursor.fetchone()[0]
+            pendiente = max(0, solicitado - recibido)
+            
+            if pendiente > 0.001: # Tolerance for floats
+                fully_completed = False
+                
+            items.append({
+                "pid": pid,
+                "producto": nombre,
+                "um": um,
+                "cantidad_solicitada": solicitado,
+                "cantidad_recibida": recibido,
+                "cantidad_pendiente": pendiente
+            })
+            
+        return {
+            "oid": oid,
+            "fully_completed": fully_completed,
+            "items": items
+        }
+    finally:
+        conn.close()
+
 def obtener_orden_compra(oid):
     conn = get_connection()
     try:

@@ -46,4 +46,9 @@ call npm install --silent
 echo Iniciando servidor de desarrollo...
 npm run dev
 
+
+REM 4. Abrir Navegador
+echo Abriendo aplicacion en navegador...
+start http://localhost:5173/login
+
 pause

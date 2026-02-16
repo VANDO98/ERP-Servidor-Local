@@ -97,6 +97,15 @@ def create_order(order: OrderRequest, current_user: dict = Depends(get_current_u
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+@router.get("/orders/pending")
+def get_pending_orders(current_user: dict = Depends(get_current_user)):
+    try:
+        df = purch_service.obtener_ordenes_pendientes()
+        return df.fillna("").to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/orders/{oid}")
 def get_order(oid: int, current_user: dict = Depends(get_current_user)):
     try:
@@ -106,6 +115,15 @@ def get_order(oid: int, current_user: dict = Depends(get_current_user)):
         return data
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/orders/{oid}/balance")
+def get_order_balance(oid: int, current_user: dict = Depends(get_current_user)):
+    try:
+        data = purch_service.obtener_saldo_orden(oid)
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
