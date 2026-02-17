@@ -13,6 +13,7 @@ from src.inventory.router import router as inventory_router
 from src.purchases.router import router as purchases_router
 from src.dashboard.router import router as dashboard_router
 from src.logistics.router import router as logistics_router
+from src.backup.router import router as backup_router
 
 # Import Services for Bulk Load (Legacy support or centralized)
 from src.inventory import service as inv_service
@@ -41,6 +42,7 @@ app.include_router(inventory_router)
 app.include_router(purchases_router)
 app.include_router(dashboard_router)
 app.include_router(logistics_router)
+app.include_router(backup_router)
 
 # --- Global Endpoints (Uploads & Templates) ---
 

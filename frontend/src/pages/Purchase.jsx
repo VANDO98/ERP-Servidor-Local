@@ -253,7 +253,7 @@ export default function Purchase() {
         try {
             const payload = {
                 ...formData,
-                items: formData.items.map(i => ({
+                itemsToRegister: formData.items.map(i => ({
                     pid: parseInt(i.pid),
                     cantidad: parseFloat(i.cantidad),
                     precio_unitario: parseFloat(i.precio_unitario)

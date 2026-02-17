@@ -83,7 +83,7 @@ export default function Layout() {
     ]
 
     const configItems = [
-        { id: 'data', label: 'Carga Masiva', icon: Database },
+        { id: 'data', label: 'Gestión de Datos', icon: Database },
         ...(user?.role === 'admin' ? [{ id: 'users', label: 'Usuarios', icon: UsersIcon }] : []),
     ]
 

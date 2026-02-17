@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Upload, Download, FileText, CheckCircle, AlertCircle, AlertTriangle, Boxes } from 'lucide-react'
+import { Upload, Download, FileText, CheckCircle, AlertCircle, AlertTriangle, Boxes, Database, ShieldCheck, Trash2, Clock } from 'lucide-react'
 import { api } from '../services/api'
 
 export default function DataManagement() {
@@ -14,6 +14,10 @@ export default function DataManagement() {
     const [selectedWarehouse, setSelectedWarehouse] = useState('')
     const [showWarning, setShowWarning] = useState(false)
 
+    // Backup State
+    const [backups, setBackups] = useState([])
+    const [backingUp, setBackingUp] = useState(false)
+
     useEffect(() => {
         loadWarehouses()
     }, [])
@@ -23,6 +27,7 @@ export default function DataManagement() {
             const data = await api.getWarehouses()
             setWarehouses(data)
             if (data.length > 0) setSelectedWarehouse(data[0].id)
+            loadBackups()
         } catch (error) {
             console.error("Error loading warehouses", error)
         }
@@ -83,6 +88,38 @@ export default function DataManagement() {
         window.open(`/api/template/${type}`, '_blank')
     }
 
+    const loadBackups = async () => {
+        try {
+            const data = await api.getBackups()
+            setBackups(data)
+        } catch (error) {
+            console.error("Error loading backups", error)
+            setMessage({ type: 'error', text: 'Error al cargar historial: ' + error.message })
+        }
+    }
+
+    const handleCreateBackup = async () => {
+        setBackingUp(true)
+        setMessage(null)
+        try {
+            await api.createBackup()
+            setMessage({ type: 'success', text: 'Copia de seguridad creada correctamente' })
+            loadBackups()
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message })
+        } finally {
+            setBackingUp(false)
+        }
+    }
+
+    const handleDownloadBackup = async (filename) => {
+        try {
+            await api.downloadBackup(filename)
+        } catch (error) {
+            alert("Error al descargar: " + error.message)
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div>
@@ -111,6 +148,13 @@ export default function DataManagement() {
                 >
                     <Download className="inline-block w-4 h-4 mr-2" />
                     Descargar Plantillas
+                </button>
+                <button
+                    onClick={() => setActiveTab('backups')}
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'backups' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                    <Database className="inline-block w-4 h-4 mr-2" />
+                    Copia de Seguridad
                 </button>
             </div>
 
@@ -249,6 +293,80 @@ export default function DataManagement() {
                             </button>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* TAB: Copia de Seguridad */}
+            {activeTab === 'backups' && (
+                <div className="space-y-6 max-w-4xl">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <ShieldCheck className="text-emerald-500" /> Protección de Datos
+                                </h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                                    Crea copias de respaldo de toda tu base de datos (Productos, Proveedores, Compras, Usuarios).
+                                    Es recomendable realizar esta acción antes de cargas masivas importantes.
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleCreateBackup}
+                                disabled={backingUp}
+                                className={`px-6 py-3 rounded-lg font-bold text-white flex items-center gap-2 transition-all ${backingUp ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-none'}`}
+                            >
+                                <Database size={18} />
+                                {backingUp ? 'Creando Copia...' : 'Crear Copia Ahora'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
+                        <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-700/30">
+                            <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                <Clock size={16} /> Historial de Copias (Últimos 7 días)
+                            </h4>
+                            <span className="text-xs text-slate-400">{backups.length} copias encontradas</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th className="px-6 py-3">Archivo</th>
+                                        <th className="px-6 py-3">Fecha</th>
+                                        <th className="px-6 py-3">Tamaño</th>
+                                        <th className="px-6 py-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {backups.length > 0 ? (
+                                        backups.map((b, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">{b.filename}</td>
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{b.created_at}</td>
+                                                <td className="px-6 py-4 text-slate-500 dark:text-slate-500">{(b.size / 1024).toFixed(1)} KB</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => handleDownloadBackup(b.filename)}
+                                                        className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 ml-auto"
+                                                    >
+                                                        <Download size={14} /> Descargar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-8 text-center text-slate-400 dark:text-slate-500">
+                                                No hay copias de seguridad registradas aún.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <MessageArea message={message} />
                 </div>
             )}
         </div>

@@ -60,7 +60,7 @@ export const api = {
 
     // --- Transactions ---
     registerPurchase: async (data) => {
-        const res = await fetch(`${API_URL}/purchase`, {
+        const res = await fetch(`${API_URL}/purchases`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(data),
@@ -221,5 +221,41 @@ export const api = {
         const res = await fetch(`${API_URL}/dashboard/complete?start_date=${startDate}&end_date=${endDate}`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
         return res.json();
+    },
+
+    // --- Backups ---
+    getBackups: async () => {
+        const res = await fetch(`${API_URL}/backups`, { headers: getHeaders() });
+        const result = await res.json().catch(() => ({ detail: 'Error de respuesta del servidor' }));
+        if (!res.ok) throw new Error(result.detail || 'Failed to fetch backups');
+        return result;
+    },
+
+    createBackup: async () => {
+        const res = await fetch(`${API_URL}/backups/create`, {
+            method: 'POST',
+            headers: getHeaders()
+        });
+        const result = await res.json().catch(() => ({ detail: 'Error de respuesta del servidor' }));
+        if (!res.ok) throw new Error(result.detail || 'Error creating backup');
+        return result;
+    },
+
+    downloadBackup: async (filename) => {
+        const res = await fetch(`${API_URL}/backups/download/${filename}`, {
+            headers: getHeaders()
+        });
+        if (!res.ok) {
+            const result = await res.json().catch(() => ({ detail: 'Error al descargar backup' }));
+            throw new Error(result.detail || 'Failed to download backup');
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 };

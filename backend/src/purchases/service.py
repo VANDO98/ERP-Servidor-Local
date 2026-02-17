@@ -229,7 +229,7 @@ def obtener_ordenes_pendientes():
                 p.id as proveedor_id
             FROM ordenes_compra oc
             JOIN proveedores p ON oc.proveedor_id = p.id
-            WHERE oc.estado IN ('PENDIENTE', 'PARCIAL')
+            WHERE oc.estado IN ('PENDIENTE', 'PARCIAL', 'APROBADA')
             ORDER BY oc.id DESC
         """
         return pd.read_sql(query, conn)
