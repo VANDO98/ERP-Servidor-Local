@@ -53,8 +53,24 @@ export default function Purchase() {
     }
 
     useEffect(() => {
-
         loadInitialData()
+
+        // Handle URL Parameters (Query String)
+        const params = new URLSearchParams(location.search)
+        const gid = params.get('guideId')
+        const oid = params.get('ocId')
+
+        if (gid && oid) {
+            loadInvoiceFromGuide(gid, oid)
+            setSelectedGuideId(gid)
+        } else if (oid) {
+            loadOcData(oid)
+        } else if (gid) {
+            handleImportGuide(gid)
+        } else if (location.state?.ocId) {
+            // Support previous state navigation if any
+            loadOcData(location.state.ocId)
+        }
     }, [])
 
     // New: Fetch history when view changes
@@ -71,11 +87,13 @@ export default function Purchase() {
     }, [view])
 
     // Load Data from OC (navigated from Orders)
-    useEffect(() => {
-        if (location.state?.ocId) {
-            loadOcData(location.state.ocId)
-        }
-    }, [location.state])
+    // This useEffect is now redundant due to the combined useEffect above, but keeping it for context if needed elsewhere.
+    // It will be effectively overridden by the new logic.
+    // useEffect(() => {
+    //     if (location.state?.ocId) {
+    //         loadOcData(location.state.ocId)
+    //     }
+    // }, [location.state])
 
     const loadOcData = async (oid) => {
         setLoading(true)
@@ -349,11 +367,11 @@ export default function Purchase() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Serie *</label>
-                                <input required type="text" placeholder="F001" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.serie} onChange={e => setFormData({ ...formData, serie: e.target.value })} />
+                                <input required type="text" placeholder="F001" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.serie} onChange={e => setFormData({ ...formData, serie: e.target.value.toUpperCase() })} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número *</label>
-                                <input required type="text" placeholder="000123" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value })} />
+                                <input required type="text" placeholder="000123" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value.toUpperCase() })} onBlur={e => setFormData({ ...formData, numero: e.target.value.padStart(6, '0') })} />
                             </div>
                         </div>
 

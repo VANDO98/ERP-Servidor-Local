@@ -5,9 +5,9 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     // Auth initialized as non-blocking to prevent UI freeze
-    const [user, setUser] = useState({ username: 'Admin Test', role: 'admin' }); // Keep admin for testing
     const [token, setToken] = useState(localStorage.getItem('token'));
-    const [loading, setLoading] = useState(false);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Configure axios defaults
     if (token) {
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
     const WARNING_TIME = 60 * 1000; // 1 minute before timeout
 
-    const [idleTimer, setIdleTimer] = useState(null);
+    const idleTimerRef = React.useRef(null);
     const [showSessionModal, setShowSessionModal] = useState(false);
     const [timeLeft, setTimeLeft] = useState(60);
 
@@ -30,26 +30,25 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         delete axios.defaults.headers.common['Authorization'];
         setShowSessionModal(false);
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
 
     const resetIdleTimer = () => {
         if (!token) return;
 
-        if (idleTimer) clearTimeout(idleTimer);
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
 
         // Timer for Warning
-        const newTimer = setTimeout(() => {
+        idleTimerRef.current = setTimeout(() => {
             setShowSessionModal(true);
         }, IDLE_TIMEOUT - WARNING_TIME);
-
-        setIdleTimer(newTimer);
     };
 
     // Activity Listeners
     useEffect(() => {
         if (!token) return;
 
-        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        const events = ['mousemove', 'keydown', 'click', 'scroll', 'mousedown'];
         const pinger = () => {
             if (!showSessionModal) resetIdleTimer();
         };
@@ -59,7 +58,7 @@ export const AuthProvider = ({ children }) => {
 
         return () => {
             events.forEach(e => window.removeEventListener(e, pinger));
-            if (idleTimer) clearTimeout(idleTimer);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
         };
     }, [token, showSessionModal]);
 
@@ -93,21 +92,18 @@ export const AuthProvider = ({ children }) => {
         const initAuth = async () => {
             if (token) {
                 try {
-                    axios.get('/api/users/me')
-                        .then(res => setUser(res.data))
-                        .catch(err => {
-                            console.error("Token verification failed", err);
-                            logout();
-                        });
+                    const res = await axios.get('/api/users/me');
+                    setUser(res.data);
                 } catch (error) {
-                    console.error("Auth Error", error);
+                    console.error("Auth verification failed", error);
+                    logout();
                 }
             }
             setLoading(false);
         };
 
         initAuth();
-    }, [token]);
+    }, []); // Only run once on mount or when token changes manually (but token is from state)
 
     const login = async (username, password) => {
         const formData = new FormData();

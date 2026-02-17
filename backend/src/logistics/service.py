@@ -10,7 +10,9 @@ def listar_guias():
             SELECT 
                 g.id, 
                 g.numero_guia, 
-                g.fecha_recepcion as fecha,
+                g.serie,
+                g.numero,
+                CAST(g.fecha_recepcion AS TEXT) as fecha,
                 p.razon_social as proveedor_nombre,
                 g.oc_id,
                 'OC-' || g.oc_id as documento_ref,
@@ -90,9 +92,9 @@ def crear_guia_remision(data):
             return False, "Número de guía ya existe para este proveedor"
 
         cursor.execute("""
-            INSERT INTO guias_remision (proveedor_id, oc_id, numero_guia, fecha_recepcion)
-            VALUES (?, ?, ?, ?)
-        """, (data['proveedor_id'], data.get('oc_id'), data['numero_guia'], data['fecha_recepcion']))
+            INSERT INTO guias_remision (proveedor_id, oc_id, numero_guia, serie, numero, fecha_recepcion)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (data['proveedor_id'], data.get('oc_id'), data['numero_guia'], data.get('serie'), data.get('numero'), data['fecha_recepcion']))
         
         guia_id = cursor.lastrowid
         

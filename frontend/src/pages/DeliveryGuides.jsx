@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import { Plus, Search, FileText, Calendar, Truck, Check, RefreshCw } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import ExportButton from '../components/ExportButton'
 
 export default function DeliveryGuides() {
@@ -16,8 +17,9 @@ export default function DeliveryGuides() {
     const [formData, setFormData] = useState({
         proveedor_id: '',
         oc_id: '',
-        numero_guia: '',
-        fecha_recepcion: new Date().toISOString().split('T')[0],
+        serie: '',
+        numero: '',
+        fecha_recepcion: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().replace('T', ' ').substring(0, 16),
         items: [], // { pid, cantidad, almacen_id }
         observaciones: ''
     })
@@ -89,13 +91,13 @@ export default function DeliveryGuides() {
 
         if (!oid) {
             setOcDetails(null)
-            setFormData(prev => ({ ...prev, items: [], oc_id: '' }))
+            setFormData(prev => ({ ...prev, items: [], oc_id: '', serie: '', numero: '' }))
             return
         }
 
         if (oid === 'manual') {
             setOcDetails(null)
-            setFormData(prev => ({ ...prev, oc_id: '', items: [] }))
+            setFormData(prev => ({ ...prev, oc_id: '', items: [], serie: '', numero: '' }))
             return
         }
 
@@ -172,11 +174,27 @@ export default function DeliveryGuides() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (formData.items.length === 0) {
+            alert("Debe agregar al menos un producto")
+            return
+        }
+
+        // Formato: Serie-Numero con padding
+        const paddedNumero = formData.numero.padStart(6, '0')
+        const fullNumero = `${formData.serie}-${paddedNumero}`
+
+        const finalData = {
+            ...formData,
+            numero_guia: fullNumero
+        }
+
         setLoading(true)
         try {
             const payload = {
-                ...formData,
-                items: formData.items
+                ...finalData,
+                serie: finalData.serie,
+                numero: finalData.numero,
+                items: finalData.items
                     .filter(i => i.cantidad > 0)
                     .map(i => ({
                         pid: parseInt(i.pid),
@@ -185,28 +203,24 @@ export default function DeliveryGuides() {
                     }))
             }
 
-            if (payload.items.length === 0) {
-                throw new Error("Debe ingresar al menos una cantidad válida mayor a 0")
-            }
-
-            const result = await api.createGuide(payload)
-
-            alert("Guía registrada correctamente")
-            fetchGuides()
-            setActiveTab('list') // Switch back to list
+            const data = await api.createGuide(payload)
+            alert(data.msg || "Guía registrada correctamente")
             setFormData({
                 proveedor_id: '',
                 oc_id: '',
-                numero_guia: '',
+                serie: '',
+                numero: '',
                 fecha_recepcion: new Date().toISOString().split('T')[0],
                 items: [],
                 observaciones: ''
             })
             setSelectedOcId('')
             setOcDetails(null)
-
+            setActiveTab('list')
+            fetchGuides()
         } catch (error) {
-            alert(error.message)
+            console.error("Error creating guide:", error)
+            alert("Error: " + (error.response?.data?.detail || error.message))
         } finally {
             setLoading(false)
         }
@@ -294,14 +308,16 @@ export default function DeliveryGuides() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                 {filteredGuides.map((g, idx) => (
                                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{g.fecha || g.fecha_recepcion}</td>
-                                        <td className="px-6 py-4 font-mono font-medium text-slate-800 dark:text-slate-200">{g.numero_guia}</td>
+                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-mono text-xs">{g.fecha || g.fecha_recepcion}</td>
+                                        <td className="px-6 py-4 font-mono font-medium text-slate-800 dark:text-slate-200">
+                                            {g.numero_guia}
+                                        </td>
                                         <td className="px-6 py-4 text-slate-800 dark:text-slate-200">{g.proveedor_nombre || g.proveedor}</td>
                                         <td className="px-6 py-4 text-blue-600 dark:text-blue-400">
                                             {g.oc_id ? (
-                                                <a href={`/purchase?ocId=${g.oc_id}&guideId=${g.id}`} className="hover:underline flex items-center gap-1">
+                                                <Link to={`/purchase?ocId=${g.oc_id}&guideId=${g.id}`} className="hover:underline flex items-center gap-1">
                                                     OC-{String(g.oc_id).padStart(6, '0')} <Truck size={14} />
-                                                </a>
+                                                </Link>
                                             ) : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-400">{g.items_count}</td>
@@ -368,16 +384,30 @@ export default function DeliveryGuides() {
                                 </div>
                             )}
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número de Guía *</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="001-000123"
-                                    className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
-                                    value={formData.numero_guia}
-                                    onChange={e => setFormData({ ...formData, numero_guia: e.target.value })}
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Serie *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="001"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
+                                        value={formData.serie}
+                                        onChange={e => setFormData({ ...formData, serie: e.target.value.toUpperCase() })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="000123"
+                                        className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
+                                        value={formData.numero}
+                                        onChange={e => setFormData({ ...formData, numero: e.target.value.toUpperCase() })}
+                                        onBlur={e => setFormData({ ...formData, numero: e.target.value.padStart(6, '0') })}
+                                    />
+                                </div>
                             </div>
 
                             <div>

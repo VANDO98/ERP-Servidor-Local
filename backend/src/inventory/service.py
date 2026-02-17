@@ -366,9 +366,9 @@ def obtener_kardex_producto(producto_id, start_date=None, end_date=None):
         
     query = f"""
         SELECT 
-            cc.fecha_emision as Fecha, 
+            cc.fecha_registro as Fecha, 
             'COMPRA' as TipoMovimiento, 
-            cc.numero as Documento,
+            CASE WHEN cc.serie IS NOT NULL AND cc.serie != '' THEN cc.serie || '-' || cc.numero ELSE cc.numero END as Documento,
             cd.cantidad as Entradas,
             0 as Salidas
         FROM compras_detalle cd
@@ -378,7 +378,7 @@ def obtener_kardex_producto(producto_id, start_date=None, end_date=None):
         UNION ALL
         
         SELECT 
-            sc.fecha as Fecha, 
+            sc.fecha_registro as Fecha, 
             'SALIDA' as TipoMovimiento, 
             'Salida #' || sc.id as Documento,
             0 as Entradas,
@@ -433,11 +433,11 @@ def obtener_kardex_general(start_date=None, end_date=None):
         
     query = f"""
         SELECT 
-            cc.fecha_emision as Fecha, 
+            cc.fecha_registro as Fecha, 
             p.nombre as Producto,
             cat.nombre as Categoria,
             'COMPRA' as TipoMovimiento, 
-            cc.numero as Documento,
+            CASE WHEN cc.serie IS NOT NULL AND cc.serie != '' THEN cc.serie || '-' || cc.numero ELSE cc.numero END as Documento,
             cd.cantidad as Entradas,
             0 as Salidas,
             p.unidad_medida as UM
@@ -450,7 +450,7 @@ def obtener_kardex_general(start_date=None, end_date=None):
         UNION ALL
         
         SELECT 
-            sc.fecha as Fecha, 
+            sc.fecha_registro as Fecha, 
             p.nombre as Producto,
             cat.nombre as Categoria,
             'SALIDA' as TipoMovimiento, 

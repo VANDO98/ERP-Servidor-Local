@@ -33,8 +33,8 @@ export default function Products() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Productos</h2>
-                    <p className="text-slate-500">Gestión maestra de artículos</p>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Productos</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Gestión maestra de artículos</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
@@ -54,13 +54,13 @@ export default function Products() {
             />
 
             {/* Toolbar */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="relative w-full md:w-96">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
                         type="text"
                         placeholder="Buscar por nombre o SKU..."
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-800 dark:text-white placeholder-slate-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -71,10 +71,10 @@ export default function Products() {
             {loading ? (
                 <div className="text-center py-12 text-slate-400">Cargando productos...</div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-600">
-                            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-100">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-100 dark:border-slate-700">
                                 <tr>
                                     <th className="px-6 py-4">SKU</th>
                                     <th className="px-6 py-4">Nombre</th>
@@ -82,31 +82,31 @@ export default function Products() {
                                     <th className="px-6 py-4 text-center">U.M.</th>
                                     <th className="px-6 py-4 text-right">Stock Global</th>
                                     <th className="px-6 py-4 text-right">Costo Prom.</th>
-                                    <th className="px-6 py-4 text-center">Estado</th> # Added Status
+                                    <th className="px-6 py-4 text-center">Estado</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                                 {filteredProducts.map((p) => (
-                                    <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-slate-500">{p.codigo_sku}</td>
-                                        <td className="px-6 py-4 font-medium text-slate-900">{p.nombre}</td>
+                                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-slate-400">{p.codigo_sku}</td>
+                                        <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">{p.nombre}</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-md text-xs">
+                                            <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-md text-xs">
                                                 {p.categoria_nombre || 'Sin Cat'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-center">{p.unidad_medida}</td>
-                                        <td className={`px-6 py-4 text-right font-medium ${p.stock_actual < p.stock_minimo ? 'text-red-500' : 'text-slate-700'}`}>
+                                        <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-400">{p.unidad_medida}</td>
+                                        <td className={`px-6 py-4 text-right font-medium ${p.stock_actual < p.stock_minimo ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                             {p.stock_actual?.toFixed(2)}
                                         </td>
-                                        <td className="px-6 py-4 text-right">S/ {p.costo_promedio?.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">S/ {p.costo_promedio?.toFixed(2)}</td>
                                         <td className="px-6 py-4 text-center">
                                             {p.stock_actual < p.stock_minimo ? (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                                                     Bajo Stock
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                                                     Normal
                                                 </span>
                                             )}

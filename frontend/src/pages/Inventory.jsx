@@ -394,7 +394,7 @@ export default function Inventory() {
                                         <div>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Stock Actual</p>
                                             <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                                {kardexData.length > 0 ? kardexData[kardexData.length - 1].Saldo?.toFixed(2) : '0.00'}
+                                                {kardexData.length > 0 ? (kardexData[0].Saldo || 0).toFixed(2) : '0.00'}
                                             </p>
                                         </div>
                                     </div>

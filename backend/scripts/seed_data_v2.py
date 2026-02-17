@@ -9,18 +9,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(current_dir)
 sys.path.append(backend_dir)
 
-# from src.auth import get_password_hash, get_username_hash, encrypt_username
-# SIMPLIFIED HASHING FOR SEEDING ONLY (To avoid dependencies)
-import hashlib
-
-def get_password_hash(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def get_username_hash(username):
-    return hashlib.sha256(username.encode()).hexdigest()
-
-def encrypt_username(username):
-    return username # No encryption for seed
+from src.auth.security import get_password_hash, get_username_hash, encrypt_username
 
 
 DB_PATH = os.path.join(backend_dir, "data", "gestion_basica.db")
@@ -300,6 +289,36 @@ def generate_transactions():
         
         # Update Header with Total
         cursor.execute("UPDATE ordenes_compra SET total_orden = ? WHERE id = ?", (total_orden, oc_id))
+
+    # 4. Guides (Optional link to OC)
+    print("  - Generating Delivery Guides...")
+    for i in range(10):
+        fecha = start_date + timedelta(days=random.randint(0, 90), hours=random.randint(0,23), minutes=random.randint(0,59))
+        prov_id = random.choice(prov_ids)
+        serie = "T00" + str(random.randint(1, 5))
+        num_val = random.randint(1, 99999)
+        numero = f"{num_val:06d}"
+        full_guia = f"{serie}-{numero}"
+        
+        # Link to a random OC from that provider if exists
+        cursor.execute("SELECT id FROM ordenes_compra WHERE proveedor_id = ?", (prov_id,))
+        ocs = cursor.fetchall()
+        oc_id = random.choice(ocs)[0] if ocs else None
+        
+        cursor.execute("""
+            INSERT INTO guias_remision (proveedor_id, oc_id, numero_guia, serie, numero, fecha_recepcion)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (prov_id, oc_id, full_guia, serie, numero, fecha.strftime("%Y-%m-%d %H:%M:%S")))
+        guia_id = cursor.lastrowid
+        
+        # Guide Details
+        items_count = random.randint(1, 4)
+        guia_items = random.sample(prod_ids, items_count)
+        for pid in guia_items:
+            cursor.execute("""
+                INSERT INTO guias_remision_det (guia_id, producto_id, cantidad_recibida, almacen_destino_id)
+                VALUES (?, ?, ?, 1)
+            """, (guia_id, pid, random.randint(1, 50)))
 
     conn.commit()
     conn.close()

@@ -123,35 +123,35 @@ export default function DataManagement() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold text-slate-800">Gestión de Datos</h2>
-                <p className="text-slate-500">Carga masiva e inicialización del sistema</p>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Gestión de Datos</h2>
+                <p className="text-slate-500 dark:text-slate-400">Carga masiva e inicialización del sistema</p>
             </div>
 
-            <div className="flex space-x-2 border-b border-slate-200 overflow-x-auto">
+            <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
                 <button
                     onClick={() => setActiveTab('upload')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'upload' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'upload' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
                     <Upload className="inline-block w-4 h-4 mr-2" />
                     Carga Masiva (Maestros)
                 </button>
                 <button
                     onClick={() => { setActiveTab('inventory'); setUploadType('initial_stock'); setMessage(null); setFile(null); }}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'inventory' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'inventory' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
                     <Boxes className="inline-block w-4 h-4 mr-2" />
                     Inventario Inicial / Ajuste
                 </button>
                 <button
                     onClick={() => setActiveTab('templates')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'templates' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'templates' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
                     <Download className="inline-block w-4 h-4 mr-2" />
                     Descargar Plantillas
                 </button>
                 <button
                     onClick={() => setActiveTab('backups')}
-                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'backups' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'backups' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 >
                     <Database className="inline-block w-4 h-4 mr-2" />
                     Copia de Seguridad
@@ -160,12 +160,12 @@ export default function DataManagement() {
 
             {/* TAB: Carga Masiva (Maestros) */}
             {activeTab === 'upload' && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-2xl">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 max-w-2xl">
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Tipo de Datos</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipo de Datos</label>
                             <select
-                                className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-white"
                                 value={uploadType}
                                 onChange={(e) => setUploadType(e.target.value)}
                             >
@@ -181,7 +181,7 @@ export default function DataManagement() {
                         <button
                             onClick={handleUpload}
                             disabled={!file || uploading}
-                            className={`w-full py-3 rounded-lg font-bold text-white transition-all ${!file || uploading ? 'bg-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'}`}
+                            className={`w-full py-3 rounded-lg font-bold text-white transition-all ${!file || uploading ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-500' : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'}`}
                         >
                             {uploading ? 'Procesando...' : 'Subir y Procesar'}
                         </button>
@@ -191,13 +191,13 @@ export default function DataManagement() {
 
             {/* TAB: Inventario Inicial */}
             {activeTab === 'inventory' && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-2xl border-l-4 border-l-amber-500">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 max-w-2xl border-l-4 border-l-amber-500">
                     <div className="space-y-6">
-                        <div className="bg-amber-50 p-4 rounded-lg flex items-start gap-3">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg flex items-start gap-3 border border-amber-100 dark:border-amber-900/30">
                             <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" />
                             <div>
-                                <h3 className="font-bold text-amber-800">Advertencia: Ajuste de Inventario</h3>
-                                <p className="text-sm text-amber-700 mt-1">
+                                <h3 className="font-bold text-amber-800 dark:text-amber-400">Advertencia: Ajuste de Inventario</h3>
+                                <p className="text-sm text-amber-700 dark:text-amber-300/80 mt-1">
                                     Esta opción permite cargar el stock inicial o realizar ajustes masivos.
                                     El stock ingresado <strong>sobrescribirá</strong> la cantidad actual en el almacén seleccionado.
                                     Asegúrese de usar la plantilla correcta.
@@ -207,9 +207,9 @@ export default function DataManagement() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Seleccionar Sede / Almacén</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Seleccionar Sede / Almacén</label>
                                 <select
-                                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                                    className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 text-slate-800 dark:text-white"
                                     value={selectedWarehouse}
                                     onChange={(e) => setSelectedWarehouse(e.target.value)}
                                 >
@@ -221,7 +221,7 @@ export default function DataManagement() {
                             <div className="flex items-end">
                                 <button
                                     onClick={() => handleDownloadTemplate('initial_stock')}
-                                    className="w-full p-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 font-medium flex items-center justify-center gap-2"
+                                    className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 font-medium flex items-center justify-center gap-2 transition-colors"
                                 >
                                     <Download size={18} /> Descargar Plantilla
                                 </button>
@@ -262,7 +262,7 @@ export default function DataManagement() {
                             <button
                                 onClick={handleUpload}
                                 disabled={!file || uploading}
-                                className={`w-full py-3 rounded-lg font-bold text-white transition-all ${!file || uploading ? 'bg-slate-300 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700 shadow-lg hover:shadow-xl'}`}
+                                className={`w-full py-3 rounded-lg font-bold text-white transition-all ${!file || uploading ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-500' : 'bg-amber-600 hover:bg-amber-700 shadow-lg hover:shadow-xl'}`}
                             >
                                 {uploading ? 'Procesando...' : 'Validar y Cargar'}
                             </button>
@@ -275,19 +275,19 @@ export default function DataManagement() {
             {activeTab === 'templates' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
-                        { id: 'products', title: 'Plantilla Productos', color: 'bg-blue-50 text-blue-700' },
-                        { id: 'providers', title: 'Plantilla Proveedores', color: 'bg-purple-50 text-purple-700' },
-                        { id: 'purchases', title: 'Plantilla Compras', color: 'bg-green-50 text-green-700' },
-                        { id: 'initial_stock', title: 'Inventario Inicial', color: 'bg-amber-50 text-amber-700' }
+                        { id: 'products', title: 'Plantilla Productos', color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' },
+                        { id: 'providers', title: 'Plantilla Proveedores', color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400' },
+                        { id: 'purchases', title: 'Plantilla Compras', color: 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' },
+                        { id: 'initial_stock', title: 'Inventario Inicial', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' }
                     ].map(t => (
-                        <div key={t.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 text-center space-y-4">
+                        <div key={t.id} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-center space-y-4">
                             <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center ${t.color}`}>
                                 <FileText size={24} />
                             </div>
-                            <h3 className="font-bold text-slate-800">{t.title}</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white">{t.title}</h3>
                             <button
                                 onClick={() => handleDownloadTemplate(t.id)}
-                                className="w-full py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors flex items-center justify-center gap-2 text-slate-600 dark:text-slate-400"
                             >
                                 <Download size={16} /> Descargar CSV
                             </button>
@@ -313,7 +313,7 @@ export default function DataManagement() {
                             <button
                                 onClick={handleCreateBackup}
                                 disabled={backingUp}
-                                className={`px-6 py-3 rounded-lg font-bold text-white flex items-center gap-2 transition-all ${backingUp ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-none'}`}
+                                className={`px-6 py-3 rounded-lg font-bold text-white flex items-center gap-2 transition-all ${backingUp ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-500' : 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 dark:shadow-none font-bold'}`}
                             >
                                 <Database size={18} />
                                 {backingUp ? 'Creando Copia...' : 'Crear Copia Ahora'}
@@ -375,7 +375,7 @@ export default function DataManagement() {
 
 function UploadArea({ file, handleFileChange }) {
     return (
-        <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
+        <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <input
                 type="file"
                 id="file-upload"
@@ -384,11 +384,11 @@ function UploadArea({ file, handleFileChange }) {
                 onChange={handleFileChange}
             />
             <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                <FileText className="w-12 h-12 text-slate-400" />
-                <span className="text-slate-600 font-medium">
+                <FileText className="w-12 h-12 text-slate-400 dark:text-slate-500" />
+                <span className="text-slate-600 dark:text-slate-300 font-medium">
                     {file ? file.name : "Haz clic para seleccionar o arrastra un archivo"}
                 </span>
-                <span className="text-xs text-slate-400">Formatos soportados: CSV, Excel</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">Formatos soportados: CSV, Excel</span>
             </label>
         </div>
     )
@@ -397,7 +397,7 @@ function UploadArea({ file, handleFileChange }) {
 function MessageArea({ message }) {
     if (!message) return null
     return (
-        <div className={`p-4 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+        <div className={`p-4 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/30'}`}>
             {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
             {message.text}
         </div>

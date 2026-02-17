@@ -64,8 +64,10 @@ def init_db(db_path):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 proveedor_id INTEGER,
                 oc_id INTEGER, -- Puede ser null si es entrada directa
-                numero_guia TEXT,
-                fecha_recepcion DATE,
+                serie TEXT,
+                numero TEXT,
+                numero_guia TEXT, -- Campo completo para compatibilidad
+                fecha_recepcion DATETIME,
                 FOREIGN KEY(oc_id) REFERENCES ordenes_compra(id)
             )''')
         cursor.execute('''CREATE TABLE guias_remision_det (
@@ -182,7 +184,7 @@ def init_db(db_path):
         conn.commit()
         print("Database schema initialized successfully.")
     except Exception as e:
-        print(f"Error creating schema: {{e}}")
+        print(f"Error creating schema: {e}")
         conn.rollback()
     finally:
         conn.close()
