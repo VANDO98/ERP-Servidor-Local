@@ -79,6 +79,7 @@ export default function Products() {
                                     <th className="px-6 py-4">SKU</th>
                                     <th className="px-6 py-4">Nombre</th>
                                     <th className="px-6 py-4">Categoría</th>
+                                    <th className="px-6 py-4">Subcategoría</th>
                                     <th className="px-6 py-4 text-center">U.M.</th>
                                     <th className="px-6 py-4 text-right">Stock Global</th>
                                     <th className="px-6 py-4 text-right">Costo Prom.</th>
@@ -94,6 +95,9 @@ export default function Products() {
                                             <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-md text-xs">
                                                 {p.categoria_nombre || 'Sin Cat'}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                                            {p.subcategoria || '-'}
                                         </td>
                                         <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-400">{p.unidad_medida}</td>
                                         <td className={`px-6 py-4 text-right font-medium ${p.stock_actual < p.stock_minimo ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'}`}>

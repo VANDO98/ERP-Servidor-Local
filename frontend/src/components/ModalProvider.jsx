@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { api } from '../services/api'
 import { X, Save } from 'lucide-react'
 
 export default function ModalProvider({ isOpen, onClose, onProviderSaved }) {
@@ -20,14 +21,7 @@ export default function ModalProvider({ isOpen, onClose, onProviderSaved }) {
         try {
             if (!formData.razon_social) throw new Error("La Razón Social es obligatoria")
 
-            const res = await fetch('/api/providers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            })
-
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.detail || "Error al guardar")
+            await api.createProvider(formData)
 
             onProviderSaved()
             onClose()

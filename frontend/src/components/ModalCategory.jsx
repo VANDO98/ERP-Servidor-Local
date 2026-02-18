@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { api } from '../services/api'
 import { X, Save } from 'lucide-react'
 
 export default function ModalCategory({ isOpen, onClose, onCategorySaved }) {
@@ -17,14 +18,7 @@ export default function ModalCategory({ isOpen, onClose, onCategorySaved }) {
         try {
             if (!formData.nombre) throw new Error("El nombre es obligatorio")
 
-            const res = await fetch('/api/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            })
-
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.detail || "Error al guardar")
+            await api.createCategory(formData)
 
             onCategorySaved()
             onClose()

@@ -229,9 +229,9 @@ export default function Orders() {
             const finalY = (doc.lastAutoTable?.finalY || yProv + 30) + 10
 
             // --- TOTALS ---
-            const total = Number(data.total || 0)
-            const subtotal = total / (1 + taxRate)
-            const igv = total - subtotal
+            const subtotal = data.items.reduce((sum, item) => sum + (Number(item.cantidad) * Number(item.precio_unitario)), 0);
+            const igv = subtotal * taxRate;
+            const total = subtotal + igv;
             const symbol = data.moneda === 'USD' ? '$' : 'S/'
 
             const xLabel = 140
@@ -569,9 +569,23 @@ export default function Orders() {
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colSpan="4" className="pt-4 text-right font-bold text-slate-700">Total Orden ({formData.moneda}):</td>
-                                    <td className="pt-4 text-right font-bold text-blue-600 text-lg">
+                                    <td colSpan="4" className="pt-4 text-right font-medium text-slate-500">Subtotal (Neto):</td>
+                                    <td className="pt-4 text-right font-medium text-slate-700">
                                         {calculateTotal().toFixed(2)}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="4" className="text-right font-medium text-slate-500">IGV (18%):</td>
+                                    <td className="text-right font-medium text-slate-700">
+                                        {(calculateTotal() * 0.18).toFixed(2)}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="4" className="pt-2 text-right font-bold text-slate-700">Total Orden ({formData.moneda}):</td>
+                                    <td className="pt-2 text-right font-bold text-blue-600 text-lg">
+                                        {(calculateTotal() * 1.18).toFixed(2)}
                                     </td>
                                     <td></td>
                                 </tr>
@@ -668,21 +682,30 @@ export default function Orders() {
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colSpan="5" className="pt-4 text-right">Subtotal:</td>
-                                        <td className="pt-4 text-right font-medium text-slate-600">
-                                            {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {(Number(selectedOrder.total || 0) / 1.18).toFixed(2)}
+                                        <td colSpan="5" className="pt-4 text-right font-medium text-slate-500">Subtotal (Neto):</td>
+                                        <td className="pt-4 text-right font-medium text-slate-700">
+                                            {(() => {
+                                                const subtotal = (selectedOrder.items || []).reduce((sum, item) => sum + (Number(item.cantidad) * Number(item.precio_unitario)), 0);
+                                                return (selectedOrder.moneda === 'USD' ? '$ ' : 'S/ ') + subtotal.toFixed(2);
+                                            })()}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="5" className="text-right">IGV (18%):</td>
-                                        <td className="text-right font-medium text-slate-600">
-                                            {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {(Number(selectedOrder.total || 0) - (Number(selectedOrder.total || 0) / 1.18)).toFixed(2)}
+                                        <td colSpan="5" className="text-right font-medium text-slate-500">IGV (18%):</td>
+                                        <td className="text-right font-medium text-slate-700">
+                                            {(() => {
+                                                const subtotal = (selectedOrder.items || []).reduce((sum, item) => sum + (Number(item.cantidad) * Number(item.precio_unitario)), 0);
+                                                return (selectedOrder.moneda === 'USD' ? '$ ' : 'S/ ') + (subtotal * 0.18).toFixed(2);
+                                            })()}
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colSpan="5" className="pt-2 text-right font-bold text-xl text-slate-800 dark:text-white">TOTAL:</td>
                                         <td className="pt-2 text-right font-bold text-xl text-blue-600">
-                                            {selectedOrder.moneda === 'USD' ? '$' : 'S/'} {Number(selectedOrder.total || 0).toFixed(2)}
+                                            {(() => {
+                                                const subtotal = (selectedOrder.items || []).reduce((sum, item) => sum + (Number(item.cantidad) * Number(item.precio_unitario)), 0);
+                                                return (selectedOrder.moneda === 'USD' ? '$ ' : 'S/ ') + (subtotal * 1.18).toFixed(2);
+                                            })()}
                                         </td>
                                     </tr>
                                 </tfoot>

@@ -8,7 +8,7 @@ from src.database.db import get_connection
 def obtener_productos():
     conn = get_connection()
     try:
-        df = pd.read_sql("SELECT id, nombre, codigo_sku, categoria_id, unidad_medida, stock_actual, stock_minimo, ROUND(costo_promedio, 2) as costo_promedio, ROUND(precio_venta, 2) as precio_venta FROM productos", conn)
+        df = pd.read_sql("SELECT id, nombre, codigo_sku, categoria_id, subcategoria, unidad_medida, stock_actual, stock_minimo, ROUND(costo_promedio, 2) as costo_promedio, ROUND(precio_venta, 2) as precio_venta FROM productos", conn)
         return df
     finally:
         conn.close()
@@ -27,7 +27,7 @@ def obtener_productos_extendido():
     """
     # Fixing query based on inspection of backend.py
     query = """
-        SELECT p.id, p.nombre, p.codigo_sku, c.nombre as categoria_nombre, 
+        SELECT p.id, p.nombre, p.codigo_sku, c.nombre as categoria_nombre, p.subcategoria,
                p.unidad_medida, p.stock_actual, p.stock_minimo, p.costo_promedio, p.precio_venta
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
@@ -52,12 +52,13 @@ def crear_producto(data):
                 return False, "SKU ya existe"
         
         conn.execute("""
-            INSERT INTO productos (nombre, codigo_sku, categoria_id, precio_venta, costo_promedio, stock_minimo, unidad_medida, stock_actual)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+            INSERT INTO productos (nombre, codigo_sku, categoria_id, subcategoria, precio_venta, costo_promedio, stock_minimo, unidad_medida, stock_actual)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
         """, (
             data['nombre'], 
             data.get('codigo_sku'), 
             data.get('categoria_id'), 
+            data.get('subcategoria', ''),
             data.get('precio_venta', 0), 
             data.get('costo_promedio', 0), 
             data.get('stock_minimo', 5), 
@@ -495,6 +496,7 @@ def carga_masiva_productos(df):
         col_sku = cols_map.get('codigosku') or cols_map.get('sku')
         col_nombre = cols_map.get('nombre') or cols_map.get('producto')
         col_cat = cols_map.get('categoria')
+        col_subcat = cols_map.get('subcategoria')
         
         if not (col_sku and col_nombre):
              return "Error: Columnas mínimas requeridas: Nombre, CodigoSKU"
@@ -525,6 +527,7 @@ def carga_masiva_productos(df):
                         pass
             
             # Map other fields
+            subcat = str(row[col_subcat]).strip() if col_subcat and pd.notna(row[col_subcat]) else ""
             precio = float(row.get(cols_map.get('precioventa'), 0)) if cols_map.get('precioventa') else 0.0
             costo = float(row.get(cols_map.get('costopromedio'), 0)) if cols_map.get('costopromedio') else 0.0
             min_stock = float(row.get(cols_map.get('stockminimo'), 5)) if cols_map.get('stockminimo') else 5.0
@@ -538,14 +541,14 @@ def carga_masiva_productos(df):
                 pid = exist[0]
                 cursor.execute("""
                     UPDATE productos SET 
-                        nombre=?, categoria_id=?, precio_venta=?, stock_minimo=?, unidad_medida=?, costo_promedio=?
+                        nombre=?, categoria_id=?, subcategoria=?, precio_venta=?, stock_minimo=?, unidad_medida=?, costo_promedio=?
                     WHERE id=?
-                """, (nombre, cat_id, precio, min_stock, um, costo, pid))
+                """, (nombre, cat_id, subcat, precio, min_stock, um, costo, pid))
             else:
                 cursor.execute("""
-                    INSERT INTO productos (nombre, codigo_sku, categoria_id, precio_venta, costo_promedio, stock_minimo, unidad_medida, stock_actual)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 0)
-                """, (nombre, sku, cat_id, precio, costo, min_stock, um))
+                    INSERT INTO productos (nombre, codigo_sku, categoria_id, subcategoria, precio_venta, costo_promedio, stock_minimo, unidad_medida, stock_actual)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """, (nombre, sku, cat_id, subcat, precio, costo, min_stock, um))
             
             processed += 1
             
@@ -561,7 +564,8 @@ def carga_masiva_productos(df):
 def carga_masiva_stock_inicial(df, almacen_id=1):
     """
     Carga masiva de inventario inicial.
-    Columns: CodigoSKU, Cantidad, CostoUnitario
+    Permite creación de productos si no existen (UPSERT).
+    Columns: CodigoSKU, Nombre, Categoria, UnidadMedida, Cantidad, CostoUnitario, PrecioVenta
     """
     conn = get_connection()
     cursor = conn.cursor()
@@ -569,55 +573,96 @@ def carga_masiva_stock_inicial(df, almacen_id=1):
     processed = 0
     
     try:
+        # Normalize columns
         cols_map = {c.lower().strip(): c for c in df.columns}
         col_sku = cols_map.get('codigosku') or cols_map.get('sku')
         col_qty = cols_map.get('cantidad') or cols_map.get('stock')
-        col_cost = cols_map.get('costounitario') or cols_map.get('costo') # Optional
+        col_nombre = cols_map.get('nombre') or cols_map.get('producto')
+        col_cat = cols_map.get('categoria')
+        col_subcat = cols_map.get('subcategoria')
+        col_um = cols_map.get('unidadmedida') or cols_map.get('unidad')
+        col_cost = cols_map.get('costounitario') or cols_map.get('costo')
+        col_price = cols_map.get('precioventa') or cols_map.get('precio')
         
         if not (col_sku and col_qty):
-            return "Error: Columnas requeridas: CodigoSKU, Cantidad"
+            return "Error: Columnas mínimas requeridas: CodigoSKU, Cantidad"
             
+        # Cache Categories
+        cursor.execute("SELECT lower(nombre), id FROM categorias")
+        cat_map = dict(cursor.fetchall())
+        
         for index, row in df.iterrows():
             sku = str(row[col_sku]).strip()
+            if not sku: continue
+            
             try:
                 qty = float(row[col_qty])
                 cost = float(row[col_cost]) if col_cost and pd.notna(row[col_cost]) else 0.0
+                price = float(row[col_price]) if col_price and pd.notna(row[col_price]) else 0.0
             except:
                 log.append(f"Fila {index}: Datos numéricos inválidos")
                 continue
-                
-            # Find Product
+            
+            nombre = str(row[col_nombre]).strip() if col_nombre and pd.notna(row[col_nombre]) else sku
+            subcat = str(row[col_subcat]).strip() if col_subcat and pd.notna(row[col_subcat]) else ""
+            um = str(row[col_um]).strip() if col_um and pd.notna(row[col_um]) else 'UN'
+            
+            # Category Logic
+            cat_id = None
+            if col_cat and pd.notna(row[col_cat]):
+                cat_name = str(row[col_cat]).strip()
+                cat_lower = cat_name.lower()
+                if cat_lower in cat_map:
+                    cat_id = cat_map[cat_lower]
+                else:
+                    try:
+                        cursor.execute("INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)", (cat_name, "Auto-created"))
+                        cat_id = cursor.lastrowid
+                        cat_map[cat_lower] = cat_id
+                    except: pass
+            
+            # Find or Create Product
             cursor.execute("SELECT id, stock_actual, costo_promedio FROM productos WHERE codigo_sku = ?", (sku,))
             prod = cursor.fetchone()
-            if not prod:
-                log.append(f"SKU {sku} no encontrado")
-                continue
-                
-            pid = prod[0]
             
-            # Update Almacen Stock
+            if prod:
+                pid = prod[0]
+                old_global_st = prod[1]
+                # Update basic info if provided (UPSERT)
+                if col_nombre:
+                    cursor.execute("""
+                        UPDATE productos SET 
+                            nombre=?, categoria_id=?, subcategoria=?, unidad_medida=?, costo_promedio=?, precio_venta=?
+                        WHERE id=?
+                    """, (nombre, cat_id, subcat, um, cost, price, pid))
+            else:
+                # Create Product
+                cursor.execute("""
+                    INSERT INTO productos (nombre, codigo_sku, categoria_id, subcategoria, unidad_medida, costo_promedio, precio_venta, stock_actual, stock_minimo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 0, 5)
+                """, (nombre, sku, cat_id, subcat, um, cost, price))
+                pid = cursor.lastrowid
+                old_global_st = 0
+            
+            # Update Almacen Stock (Overwrite for initial inventory)
             cursor.execute("SELECT id, stock_actual FROM stock_almacen WHERE producto_id=? AND almacen_id=?", (pid, almacen_id))
             st_row = cursor.fetchone()
             
-            old_st = 0
+            old_almacen_st = 0
             if st_row:
-                old_st = st_row[1]
+                old_almacen_st = st_row[1]
                 cursor.execute("UPDATE stock_almacen SET stock_actual=? WHERE id=?", (qty, st_row[0]))
             else:
                 cursor.execute("INSERT INTO stock_almacen (producto_id, almacen_id, stock_actual) VALUES (?, ?, ?)", (pid, almacen_id, qty))
                 
             # Update Global Stock (Diff)
-            diff = qty - old_st
+            diff = qty - old_almacen_st
             cursor.execute("UPDATE productos SET stock_actual = stock_actual + ? WHERE id=?", (diff, pid))
-            
-            # Update Cost if provided
-            if cost > 0:
-                cursor.execute("UPDATE productos SET costo_promedio = ? WHERE id=?", (cost, pid))
                 
             processed += 1
             
         conn.commit()
-        return f"Stock actualizado para {processed} items. {len(log)} errores."
+        return f"Procesados {processed} items. {len(log)} errores."
     except Exception as e:
         conn.rollback()
         return f"Error carga stock: {str(e)}"

@@ -29,6 +29,7 @@ export default function Purchase() {
         numero: '',
         tc: 3.85,
         tasa_igv: 18,
+        almacen_id: '',
         items: [],
         orden_compra_id: null, // Link to OC
         guia_remision_id: null // Track guide reference
@@ -49,6 +50,9 @@ export default function Purchase() {
             setGuides(guidesData) // Set guides
             setSuppliers(provs)
             setWarehouses(whs)
+            if (whs.length > 0) {
+                setFormData(prev => ({ ...prev, almacen_id: whs[0].id }))
+            }
         }).catch(console.error)
     }
 
@@ -108,6 +112,7 @@ export default function Purchase() {
                 moneda: order.moneda,
                 tasa_igv: order.tasa_igv || 18,
                 orden_compra_id: oid,
+                almacen_id: order.almacen_id || prev.almacen_id || (warehouses.length > 0 ? warehouses[0].id : ''),
                 observaciones: `Facturación de OC-${String(oid).padStart(6, '0')}`,
                 items: (order.items || []).map(i => ({
                     pid: i.producto_id || i.pid,
@@ -166,6 +171,7 @@ export default function Purchase() {
                 tasa_igv: orderDoc.tasa_igv || 18,
                 orden_compra_id: oid,
                 guia_remision_id: gid,
+                almacen_id: gCab.almacen_destino_id || orderDoc.almacen_id || prev.almacen_id || (warehouses.length > 0 ? warehouses[0].id : ''),
                 observaciones: `Facturación de Guía ${gCab.numero_guia} (OC-${String(oid).padStart(6, '0')})`,
                 items: mergedItems
             }))
@@ -264,13 +270,22 @@ export default function Purchase() {
             return
         }
 
+        if (!formData.almacen_id) {
+            setErrorMsg('Debe seleccionar un almacén de destino (Sede)')
+            return
+        }
+
         setLoading(true)
         setErrorMsg('')
         setSuccessMsg('')
 
         try {
+            const subtotalNeto = formData.items.reduce((sum, i) => sum + (parseFloat(i.cantidad || 0) * parseFloat(i.precio_unitario || 0)), 0)
+            const grandTotal = subtotalNeto * (1 + (parseFloat(formData.tasa_igv) || 18) / 100)
+
             const payload = {
                 ...formData,
+                total: grandTotal,
                 itemsToRegister: formData.items.map(i => ({
                     pid: parseInt(i.pid),
                     cantidad: parseFloat(i.cantidad),
@@ -373,6 +388,23 @@ export default function Purchase() {
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Número *</label>
                                 <input required type="text" placeholder="000123" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400" value={formData.numero} onChange={e => setFormData({ ...formData, numero: e.target.value.toUpperCase() })} onBlur={e => setFormData({ ...formData, numero: e.target.value.padStart(6, '0') })} />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">📦 Sede / Almacén Destino *</label>
+                                <select
+                                    required
+                                    className={`w-full p-2 border rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 ${warehouses.length === 0 ? 'border-amber-500 ring-amber-200' : 'border-slate-200 dark:border-slate-600 focus:ring-blue-500'}`}
+                                    value={formData.almacen_id}
+                                    onChange={e => setFormData({ ...formData, almacen_id: e.target.value })}
+                                >
+                                    <option value="">Seleccionar Sede...</option>
+                                    {warehouses.map(w => <option key={w.id} value={w.id}>{w.nombre} {w.ubicacion ? `(${w.ubicacion})` : ''}</option>)}
+                                </select>
+                                {warehouses.length === 0 && (
+                                    <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+                                        <AlertCircle size={10} /> No hay almacenes creados. Cree uno primero.
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -444,8 +476,8 @@ export default function Purchase() {
                                             <th className="px-4 py-3 text-left">Producto *</th>
                                             <th className="px-4 py-3 text-left">U.M.</th>
                                             <th className="px-4 py-3 text-right">Cantidad *</th>
-                                            <th className="px-4 py-3 text-right">Precio Unit. *</th>
-                                            <th className="px-4 py-3 text-right">Subtotal</th>
+                                            <th className="px-4 py-3 text-right">Precio Unit. (Sin IGV) *</th>
+                                            <th className="px-4 py-3 text-right">Subtotal (Neto)</th>
                                             <th className="px-4 py-3"></th>
                                         </tr>
                                     </thead>
@@ -473,7 +505,7 @@ export default function Purchase() {
                                                         <input required type="number" step="0.01" min="0" className="w-28 p-2 border border-slate-200 dark:border-slate-600 rounded text-sm text-right bg-white dark:bg-slate-700 text-slate-800 dark:text-white" value={item.precio_unitario} onChange={e => updateItem(idx, 'precio_unitario', e.target.value)} onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) updateItem(idx, 'precio_unitario', val.toFixed(2)) }} />
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">
-                                                        S/ {subtotal.toFixed(2)}
+                                                        {formData.moneda === 'USD' ? '$' : 'S/'} {subtotal.toFixed(2)}
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
@@ -488,11 +520,9 @@ export default function Purchase() {
                                         <tr>
                                             <td colSpan="4" className="px-4 py-3 text-right">SUBTOTAL (Valor Neto):</td>
                                             <td className="px-4 py-3 text-right">
-                                                S/ {(() => {
+                                                {formData.moneda === 'USD' ? '$' : 'S/'} {(() => {
                                                     const subtotal = formData.items.reduce((sum, i) => {
-                                                        const precioInclIGV = parseFloat(i.precio_unitario) || 0
-                                                        const precioNeto = precioInclIGV / (1 + formData.tasa_igv / 100)
-                                                        return sum + ((i.cantidad || 0) * precioNeto)
+                                                        return sum + ((i.cantidad || 0) * (i.precio_unitario || 0))
                                                     }, 0)
                                                     return subtotal.toFixed(2)
                                                 })()}
@@ -502,11 +532,9 @@ export default function Purchase() {
                                         <tr>
                                             <td colSpan="4" className="px-4 py-3 text-right">IGV ({formData.tasa_igv}%):</td>
                                             <td className="px-4 py-3 text-right">
-                                                S/ {(() => {
+                                                {formData.moneda === 'USD' ? '$' : 'S/'} {(() => {
                                                     const subtotal = formData.items.reduce((sum, i) => {
-                                                        const precioInclIGV = parseFloat(i.precio_unitario) || 0
-                                                        const precioNeto = precioInclIGV / (1 + formData.tasa_igv / 100)
-                                                        return sum + ((i.cantidad || 0) * precioNeto)
+                                                        return sum + ((i.cantidad || 0) * (i.precio_unitario || 0))
                                                     }, 0)
                                                     const igv = subtotal * (formData.tasa_igv / 100)
                                                     return igv.toFixed(2)
@@ -517,7 +545,13 @@ export default function Purchase() {
                                         <tr className="text-lg">
                                             <td colSpan="4" className="px-4 py-3 text-right">TOTAL:</td>
                                             <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400">
-                                                S/ {formData.items.reduce((sum, i) => sum + ((i.cantidad || 0) * (i.precio_unitario || 0)), 0).toFixed(2)}
+                                                {formData.moneda === 'USD' ? '$' : 'S/'} {(() => {
+                                                    const subtotal = formData.items.reduce((sum, i) => {
+                                                        return sum + ((i.cantidad || 0) * (i.precio_unitario || 0))
+                                                    }, 0)
+                                                    const total = subtotal * (1 + formData.tasa_igv / 100)
+                                                    return total.toFixed(2)
+                                                })()}
                                             </td>
                                             <td></td>
                                         </tr>

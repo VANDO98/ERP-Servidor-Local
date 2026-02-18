@@ -11,7 +11,8 @@ export default function ModalProduct({ isOpen, onClose, onProductSaved }) {
         unidad_medida: 'UN',
         precio_venta: '',
         costo_promedio: '',
-        stock_minimo: 5
+        stock_minimo: 5,
+        subcategoria: ''
     })
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(false)
@@ -28,7 +29,8 @@ export default function ModalProduct({ isOpen, onClose, onProductSaved }) {
                 unidad_medida: 'UN',
                 precio_venta: '',
                 costo_promedio: '',
-                stock_minimo: 5
+                stock_minimo: 5,
+                subcategoria: ''
             })
             setError('')
         }
@@ -59,14 +61,7 @@ export default function ModalProduct({ isOpen, onClose, onProductSaved }) {
                 stock_minimo: parseFloat(formData.stock_minimo || 0)
             }
 
-            const res = await fetch('/api/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.detail || "Error al guardar")
+            await api.createProduct(payload)
 
             onProductSaved()
             onClose()
@@ -161,6 +156,17 @@ export default function ModalProduct({ isOpen, onClose, onProductSaved }) {
                                 <Plus size={20} />
                             </button>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Subcategoría (Opcional)</label>
+                        <input
+                            type="text"
+                            placeholder="Ej: Acero, Pintura Latex, etc."
+                            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            value={formData.subcategoria}
+                            onChange={e => setFormData({ ...formData, subcategoria: e.target.value })}
+                        />
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">

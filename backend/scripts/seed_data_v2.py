@@ -143,8 +143,8 @@ def seed_master_data():
     
     # Prepare inserts
     cursor.executemany("""
-        INSERT INTO productos (codigo_sku, nombre, unidad_medida, categoria_id, precio_venta, costo_promedio, stock_actual, stock_minimo) 
-        VALUES (?, ?, ?, ?, ?, ?, 0, 10)
+        INSERT INTO productos (codigo_sku, nombre, unidad_medida, categoria_id, precio_venta, costo_promedio, stock_actual, stock_minimo, subcategoria) 
+        VALUES (?, ?, ?, ?, ?, ?, 0, 10, '')
     """, [(p[0], p[1], p[2], p[3], p[4], p[5]) for p in productos])
     
     conn.commit()

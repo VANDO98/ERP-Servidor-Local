@@ -26,6 +26,17 @@ export const api = {
         return res.json();
     },
 
+    createProduct: async (data) => {
+        const res = await fetch(`${API_URL}/products`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || 'Error creating product');
+        return result;
+    },
+
     // --- Inventory ---
     getInventoryDetailed: async () => {
         const res = await fetch(`${API_URL}/inventory/detailed`, { headers: getHeaders() });
@@ -98,6 +109,17 @@ export const api = {
         const res = await fetch(`${API_URL}/providers`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch providers');
         return res.json();
+    },
+
+    createProvider: async (data) => {
+        const res = await fetch(`${API_URL}/providers`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || 'Error creating provider');
+        return result;
     },
 
     // --- Orders ---
@@ -214,6 +236,35 @@ export const api = {
         const res = await fetch(`${API_URL}/warehouses`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch warehouses');
         return res.json();
+    },
+
+    createWarehouse: async (data) => {
+        const res = await fetch(`${API_URL}/warehouses`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || 'Error creating warehouse');
+        return result;
+    },
+
+    // --- Categories ---
+    getCategories: async () => {
+        const res = await fetch(`${API_URL}/categories`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch categories');
+        return res.json();
+    },
+
+    createCategory: async (data) => {
+        const res = await fetch(`${API_URL}/categories`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || 'Error creating category');
+        return result;
     },
 
     // --- Dashboard ---

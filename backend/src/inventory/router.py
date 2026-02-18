@@ -16,6 +16,7 @@ class ProductCreate(BaseModel):
     costo_promedio: Optional[float] = 0.0
     stock_minimo: Optional[float] = 5.0
     unidad_medida: Optional[str] = 'UN'
+    subcategoria: Optional[str] = ""
 
 class WarehouseCreate(BaseModel):
     nombre: str

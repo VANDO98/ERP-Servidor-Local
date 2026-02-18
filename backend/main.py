@@ -54,7 +54,7 @@ def read_root():
 def get_template(type: str):
     """Generate CSV template for bulk load"""
     if type == 'products':
-        cols = ['CodigoSKU', 'Nombre', 'Categoria', 'UnidadMedida', 'StockMinimo', 'CostoPromedio', 'PrecioVenta']
+        cols = ['Nombre', 'CodigoSKU', 'Categoria', 'Subcategoria', 'PrecioVenta', 'CostoPromedio', 'StockMinimo', 'UnidadMedida']
         df = pd.DataFrame(columns=cols)
     elif type == 'providers':
         cols = ['RUC', 'RazonSocial', 'Direccion', 'Telefono', 'Email', 'Categoria']
@@ -64,7 +64,7 @@ def get_template(type: str):
         cols = ['Fecha', 'RUC_Proveedor', 'Serie', 'Numero', 'Moneda', 'Total', 'ProductoSKU', 'Cantidad', 'PrecioUnitario']
         df = pd.DataFrame(columns=cols)
     elif type == 'initial_stock':
-        cols = ['CodigoSKU', 'Cantidad', 'CostoUnitario']
+        cols = ['CodigoSKU', 'Nombre', 'Categoria', 'Subcategoria', 'UnidadMedida', 'Cantidad', 'CostoUnitario', 'PrecioVenta']
         df = pd.DataFrame(columns=cols)
     else:
         raise HTTPException(status_code=400, detail="Invalid template type")

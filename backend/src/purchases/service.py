@@ -101,8 +101,9 @@ def registrar_compra(cabecera, detalles):
     cursor = conn.cursor()
     try:
         # Calculate totals
+        tasa_igv = float(cabecera.get('tasa_igv', 18))
         total_raw = float(cabecera['total'])
-        base = round(total_raw / 1.18, 2)
+        base = round(total_raw / (1 + tasa_igv / 100), 2)
         igv = round(total_raw - base, 2)
         
         # Handle Document Number
@@ -140,7 +141,14 @@ def registrar_compra(cabecera, detalles):
             cursor.execute("UPDATE ordenes_compra SET estado = 'ATENDIDO' WHERE id = ?", (oc_id,))
         
         # Procesar Detalles
-        almacen_defecto = cabecera.get('almacen_id', 1)
+        almacen_defecto = cabecera.get('almacen_id')
+        if not almacen_defecto:
+            return {'success': False, 'error': "Debe seleccionar un almacén de destino"}
+            
+        # Validar existencia del almacén
+        cursor.execute("SELECT id FROM almacenes WHERE id = ?", (almacen_defecto,))
+        if not cursor.fetchone():
+            return {'success': False, 'error': f"El almacén con ID {almacen_defecto} no existe"}
         
         for d in detalles:
             pid = d.get('producto_id', d.get('pid'))

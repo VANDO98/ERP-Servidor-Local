@@ -116,7 +116,7 @@ def init_db(db_path):
                 categoria TEXT,
                 stock_actual REAL DEFAULT 0,
                 costo_promedio REAL DEFAULT 0
-            , precio_venta REAL DEFAULT 0, categoria_id INTEGER DEFAULT 1 REFERENCES categorias(id), stock_minimo REAL DEFAULT 0)''')
+            , precio_venta REAL DEFAULT 0, categoria_id INTEGER DEFAULT 1 REFERENCES categorias(id), stock_minimo REAL DEFAULT 0, subcategoria TEXT DEFAULT '')''')
         cursor.execute('''CREATE TABLE proveedores (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ruc_dni TEXT UNIQUE NOT NULL,
